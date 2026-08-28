@@ -1,0 +1,112 @@
+# ==========================================
+# Diretórios externos ao projeto versionado
+# ==========================================
+
+/backend/
+
+# ==========================================
+# .NET / Visual Studio
+# ==========================================
+
+.vs/
+.vscode/
+
+**/bin/
+**/obj/
+
+*.user
+*.suo
+*.userosscache
+*.sln.iml
+
+# Build
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]uild/
+[Ll]og/
+
+# ==========================================
+# Testes
+# ==========================================
+
+TestResults/
+**/TestResults/
+
+*.trx
+*.coverage
+*.coveragexml
+
+# Cobertura
+coverage/
+**/coverage/
+
+# ==========================================
+# NuGet
+# ==========================================
+
+packages/
+**/packages/
+
+*.nupkg
+*.snupkg
+
+.nuget/
+
+# ==========================================
+# ASP.NET Core / Desenvolvimento local
+# ==========================================
+
+# Configurações locais com credenciais
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# User Secrets
+secrets.json
+
+# Certificados locais
+*.pfx
+*.p12
+
+# ==========================================
+# Variáveis de ambiente / Segredos
+# ==========================================
+
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# Logs
+# ==========================================
+
+*.log
+
+# ==========================================
+# Sistema operacional
+# ==========================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Arquivos temporários
+# ==========================================
+
+*.tmp
+*.temp
+*.cache
+*.bak
+
+# ==========================================
+# Bancos locais
+# ==========================================
+
+*.db
+*.db-shm
+*.db-wal
