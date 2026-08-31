@@ -51,7 +51,7 @@ namespace SIGTI.Domain.Tests.Builders
             return this;
         }
 
-        public UserBuilder WithDepartmentId(Department department)
+        public UserBuilder WithDepartment(Department department)
         {
             _department = department;
             return this;

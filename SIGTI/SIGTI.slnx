@@ -8,5 +8,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/SIGTI.Application.Tests/SIGTI.Application.Tests.csproj" />
     <Project Path="tests/SIGTI.Domain.Tests/SIGTI.Domain.Tests.csproj" />
+    <Project Path="tests/SIGTI.Infrastructure.Tests/SIGTI.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

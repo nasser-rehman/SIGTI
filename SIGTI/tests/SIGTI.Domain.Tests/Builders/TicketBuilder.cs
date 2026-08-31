@@ -82,6 +82,18 @@ namespace SIGTI.Domain.Tests.Builders
             return this;
         }
 
+        public TicketBuilder WithQueue(SupportQueue queue)
+        {
+            _queue = queue;
+            return this;
+        }
+
+        public TicketBuilder WithCreatedBy(User createdBy)
+        {
+            _createdBy = createdBy;
+            return this;
+        }
+
         public Ticket Build()
         {
             return new Ticket(
