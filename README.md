@@ -41,6 +41,7 @@ SIGTI
 └── tests
     ├── SIGTI.Application.Tests
     └── SIGTI.Domain.Tests
+    └── SIGTI.Infrastructure.Tests
 ```
 
 ### SIGTI.Domain
