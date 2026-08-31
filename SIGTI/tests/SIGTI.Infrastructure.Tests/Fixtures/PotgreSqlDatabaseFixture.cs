@@ -5,58 +5,56 @@ using Respawn;
 using SIGTI.Infrastructure.Persistence.Context;
 using Xunit;
 
-namespace SIGTI.Infrastructure.Tests.Fixtures
+namespace SIGTI.Infrastructure.Tests.Fixtures;
+
+public class PostgreSqlDatabaseFixture : IAsyncLifetime
 {
-    public class PostgreSqlDatabaseFixture : IAsyncLifetime
+    private const string ConnectionString =
+        "Host=localhost;Port=5432;Database=sigti_tests;Username=postgres;Password=postgres";
+
+    private Respawner _respawner = default!;
+
+    public async Task InitializeAsync()
     {
-        private const string ConnectionString =
-            "Host=localhost;Port=5432;Database=sigti_tests;Username=postgres;Password=postgres";
+        // 1. Aplica as migrations uma única vez na inicialização
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(ConnectionString)
+            .Options;
 
-        private Respawner _respawner = default!;
-        private DbConnection _dbConnection = default;
+        await using var context = new ApplicationDbContext(options);
+        await context.Database.MigrateAsync();
 
-        public async Task InitializeAsync()
-        {
-            // 1. Garante que o banco de teste existe e aplica as migrations
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(ConnectionString)
-                .Options;
+        // 2. Cria o Respawner usando uma conexão aberta
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
 
-            await using var context = new ApplicationDbContext(options);
-            await context.Database.MigrateAsync();
-
-            // 2. Inicializa a conexão e o Respawner para limpezas rápidas
-            _dbConnection = new NpgsqlConnection(ConnectionString);
-            await _dbConnection.OpenAsync();
-
-            _respawner = await Respawner.CreateAsync(
-                _dbConnection,
-                new RespawnerOptions
-                {
-                    DbAdapter = DbAdapter.Postgres,
-                    SchemasToInclude = ["public"],
-                    TablesToIgnore = ["__EFMigrationsHistory"],
-                }
-            );
-        }
-
-        public ApplicationDbContext CreateDbContext()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(ConnectionString)
-                .Options;
-
-            return new ApplicationDbContext(options);
-        }
-
-        public async Task ResetDatabaseAsync()
-        {
-            await _respawner.ResetAsync(_dbConnection);
-        }
-
-        public async Task DisposeAsync()
-        {
-            await _dbConnection.DisposeAsync();
-        }
+        _respawner = await Respawner.CreateAsync(
+            connection,
+            new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                SchemasToInclude = ["public"],
+                TablesToIgnore = ["__EFMigrationsHistory"],
+            }
+        );
     }
+
+    public ApplicationDbContext CreateDbContext()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(ConnectionString)
+            .Options;
+
+        return new ApplicationDbContext(options);
+    }
+
+    public async Task ResetDatabaseAsync()
+    {
+        // Abre uma conexão nova para executar o truncate do Respawn
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        await _respawner.ResetAsync(connection);
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 }

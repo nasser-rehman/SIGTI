@@ -72,7 +72,13 @@ namespace SIGTI.Domain.Tests.Builders
         public User Build()
         {
             var email = _emailObject ?? new Email(_email);
-            var user = new User(_name, email, _passwordHash, _role, _department);
+            var user = new User(
+                _name,
+                email,
+                _passwordHash,
+                _role,
+                _department
+            );
 
             if (!_isActive)
                 user.Deactivate();

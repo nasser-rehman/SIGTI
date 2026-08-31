@@ -6,7 +6,8 @@ namespace SIGTI.Domain.Tests.Builders
 {
     public class TicketBuilder
     {
-        private int _number = 1;
+        private static int _ticketCounter = 0;
+        private int _number = Interlocked.Increment(ref _ticketCounter);
         private string _title = "Erro no computador";
         private string _description = "Tela azul ao iniciar.";
         private TicketPriority _priority = TicketPriority.Medium;
@@ -125,10 +126,18 @@ namespace SIGTI.Domain.Tests.Builders
         public Ticket BuildAsResolved()
         {
             var ticket = Build();
-            var technician = new UserBuilder().WithRole(Role.Technician).Build();
-            var assigner = new UserBuilder().WithRole(Role.Administrator).Build();
+            var technician = new UserBuilder()
+                .WithRole(Role.Technician)
+                .Build();
+            var assigner = new UserBuilder()
+                .WithRole(Role.Administrator)
+                .Build();
             ticket.SendToQueue();
-            ticket.AssignTechnician(technician, assigner, "Atribuição inicial ao N1");
+            ticket.AssignTechnician(
+                technician,
+                assigner,
+                "Atribuição inicial ao N1"
+            );
             ticket.StartService();
             ticket.Resolve();
 

@@ -13,7 +13,7 @@ public class TicketTests
     [Fact]
     public void Should_Create_A_New_Ticket()
     {
-        var ticket = new TicketBuilder().Build();
+        var ticket = new TicketBuilder().WithNumber(1).Build();
 
         ticket.Number.Should().Be(1);
         ticket.Title.Should().Be("Erro no computador");
@@ -85,7 +85,9 @@ public class TicketTests
         action
             .Should()
             .Throw<DomainException>()
-            .WithMessage("O ticket deve estar atribuído a um técnico para iniciar o atendimento.");
+            .WithMessage(
+                "O ticket deve estar atribuído a um técnico para iniciar o atendimento."
+            );
     }
 
     [Fact]
@@ -98,13 +100,19 @@ public class TicketTests
 
         // Act
         Action action = () =>
-            ticket.AssignTechnician(technician, assignedBy, "Atribuição inicial ao N1");
+            ticket.AssignTechnician(
+                technician,
+                assignedBy,
+                "Atribuição inicial ao N1"
+            );
 
         // Assert
         action
             .Should()
             .Throw<DomainException>()
-            .WithMessage("Não é possível atribuir técnicos a tickets fechados.");
+            .WithMessage(
+                "Não é possível atribuir técnicos a tickets fechados."
+            );
     }
 
     [Fact]
@@ -114,7 +122,11 @@ public class TicketTests
         var technician = new UserBuilder().WithRole(Role.Technician).Build();
         var assignedBy = new UserBuilder().WithRole(Role.Administrator).Build();
         ticket.SendToQueue();
-        ticket.AssignTechnician(technician, assignedBy, "Atribuição inicial ao N1");
+        ticket.AssignTechnician(
+            technician,
+            assignedBy,
+            "Atribuição inicial ao N1"
+        );
         ticket.StartService();
 
         ticket.FirstResponseAt.Should().NotBeNull();
@@ -130,7 +142,9 @@ public class TicketTests
         action
             .Should()
             .Throw<DomainException>()
-            .WithMessage("O ticket deve estar atribuído a um técnico para iniciar o atendimento.");
+            .WithMessage(
+                "O ticket deve estar atribuído a um técnico para iniciar o atendimento."
+            );
     }
 
     [Fact]
@@ -141,12 +155,18 @@ public class TicketTests
         var assignedBy = new UserBuilder().WithRole(Role.Administrator).Build();
 
         Action action = () =>
-            ticket.AssignTechnician(technician, assignedBy, "Atribuição inicial ao N1");
+            ticket.AssignTechnician(
+                technician,
+                assignedBy,
+                "Atribuição inicial ao N1"
+            );
 
         action
             .Should()
             .Throw<DomainException>()
-            .WithMessage("Não é possível atribuir técnicos a tickets fechados.");
+            .WithMessage(
+                "Não é possível atribuir técnicos a tickets fechados."
+            );
     }
 
     [Fact]
@@ -173,7 +193,9 @@ public class TicketTests
         action
             .Should()
             .Throw<DomainException>()
-            .WithMessage("Não é possível efetuar comentários em tickets fechados.");
+            .WithMessage(
+                "Não é possível efetuar comentários em tickets fechados."
+            );
     }
 
     [Fact]
