@@ -262,19 +262,20 @@ GET /api/tickets?page=1&pageSize=20&sortBy=Priority&sortDirection=Ascending
 
 ## Testes
 
-Os testes estão separados por responsabilidade:
+Os testes estão separados por responsabilidade e nível de isolamento:
 
 ```text
 tests
-├── SIGTI.Domain.Tests
-└── SIGTI.Application.Tests
+├── SIGTI.Domain.Tests           # Regras puras de negócio e invariantes do domínio
+├── SIGTI.Application.Tests      # Casos de uso com mocks de dependências (Moq)
+└── SIGTI.Infrastructure.Tests   # Testes de integração reais contra PostgreSQL usando Respawn
 ```
 
-Os testes do domínio validam principalmente regras de negócio.
+Domínio: Valida entidades, value objects e transições de estado.
 
-Os testes da Application validam o comportamento dos casos de uso e a interação com suas dependências.
+Application: Valida o pipeline do MediatR, handlers, validações e DTOs.
 
-Para executar todos os testes:
+Infrastructure: Executa testes de repositórios contra uma instância real de PostgreSQL, validando migrations, queries complexas, ordenações e carregamento eager de relacionamentos (Include/ThenInclude), isolando cada teste via truncamento com Respawn.
 
 ```bash
 dotnet test
@@ -284,16 +285,12 @@ dotnet test
 
 ## Tecnologias
 
-- C#
-- .NET
+- C# /  .NET
 - ASP.NET Core
-- Entity Framework Core
-- PostgreSQL
-- MediatR
-- FluentValidation
-- xUnit
-- FluentAssertions
-- Moq
+- Entity Framework Core & PostgreSQL (Npgsql)
+- MediatR & FluentValidation
+- xUnit & FluentAssertions
+- Moq & Respawn (Database Isolation)
 - Swagger / OpenAPI
 
 ---
@@ -367,9 +364,9 @@ O objetivo atual é continuar expandindo os casos de uso do sistema e fortalecer
 Algumas funcionalidades planejadas:
 
 - [ ] Assumir atendimento;
-- [ ] Iniciar atendimento;
+- [x] Iniciar atendimento;
 - [ ] Transferir ticket;
-- [ ] Resolver ticket;
+- [x] Resolver ticket;
 - [ ] Fechar ticket;
 - [ ] Reabrir ticket;
 - [ ] Histórico completo do ticket;
@@ -379,7 +376,7 @@ Algumas funcionalidades planejadas:
 - [ ] Gestão de filas;
 - [ ] Dashboard;
 - [ ] SLA;
-- [ ] Testes de integração.
+- [x] Testes de integração.
 
 ---
 
