@@ -98,7 +98,7 @@ namespace SIGTI.Infrastructure.Tests.Repositories
 
             var createdBy = new UserBuilder()
                 .WithDepartment(department)
-                .WithEmail("creator@sigti.local")
+                .WithEmail("createdBy@sigti.local")
                 .Build();
             var techA = new UserBuilder()
                 .WithDepartment(department)
@@ -372,6 +372,107 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                         TicketPriority.Critical
                     );
             }
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenTicketExists_ShouldReturnTicketWithAllNavigationsLoaded()
+        {
+            // Arrange: Build aggregate graph with department, queue, assignments, comments, and audit histories
+            var department = new DepartmentBuilder().Build();
+            var queue = new SupportQueueBuilder().Build();
+
+            var createdBy = new UserBuilder()
+                .WithEmail("create@sigti.local")
+                .WithDepartment(department)
+                .WithRole(Role.User)
+                .Build();
+            var assigner = new UserBuilder()
+                .WithEmail("administrator@sigti.local")
+                .WithRole(Role.Administrator)
+                .WithDepartment(department)
+                .Build();
+            var technician = new UserBuilder()
+                .WithEmail("tech@sigti.local")
+                .WithDepartment(department)
+                .WithRole(Role.Technician)
+                .Build();
+
+            var ticket = new TicketBuilder()
+                .WithDepartment(department)
+                .WithQueue(queue)
+                .WithCreatedBy(createdBy)
+                .Build();
+
+            // Attach assignment history
+            ticket.AssignTechnician(
+                technician,
+                assigner,
+                "Initial assignment for triage"
+            );
+
+            // Attach comment by the assigner (e.g., triage technician / manager)
+            var comment = new Comment(
+                "Ticket assigned to infrastructure specialist.",
+                ticket,
+                assigner
+            );
+            ticket.AddComment(comment);
+
+            await using (var setupContext = _fixture.CreateDbContext())
+            {
+                await setupContext.Departments.AddAsync(department);
+                await setupContext.SupportQueues.AddAsync(queue);
+                await setupContext.Users.AddRangeAsync(
+                    createdBy,
+                    assigner,
+                    technician
+                );
+                await setupContext.Tickets.AddAsync(ticket);
+                await setupContext.SaveChangesAsync();
+            }
+
+            // Act: Query ticket by ID in an isolated DbContext
+            Ticket? result;
+            await using (var actContext = _fixture.CreateDbContext())
+            {
+                var repository = new TicketRepository(actContext);
+                result = await repository.GetByIdAsync(
+                    ticket.Id,
+                    CancellationToken.None
+                );
+            }
+
+            // Assert: Verify root entity and all eager-loaded navigation properties
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(ticket.Id);
+
+            // Direct navigations
+            result.Department.Should().NotBeNull();
+            result.Department.Id.Should().Be(department.Id);
+
+            result.CreatedBy.Should().NotBeNull();
+            result.CreatedBy.Id.Should().Be(createdBy.Id);
+
+            result.Queue.Should().NotBeNull();
+            result.Queue.Id.Should().Be(queue.Id);
+
+            // Collection: Assignments + nested navigations (Technician & AssignedBy)
+            result.Assignments.Should().HaveCount(1);
+            var loadedAssignment = result.Assignments.First();
+            loadedAssignment.Technician.Should().NotBeNull();
+            loadedAssignment.Technician.Id.Should().Be(technician.Id);
+            loadedAssignment.AssignedBy.Should().NotBeNull();
+            loadedAssignment.AssignedBy.Id.Should().Be(assigner.Id);
+
+            // Collection: Comments + Author navigation
+            result.Comments.Should().HaveCount(1);
+            var loadedComment = result.Comments.First();
+            loadedComment.Author.Should().NotBeNull();
+            loadedComment.Author.Id.Should().Be(assigner.Id);
+
+            // Collection: Histories (Audit trail)
+            result.Assignments.Should().NotBeNull();
+            result.Assignments.Should().NotBeEmpty();
         }
     }
 }
