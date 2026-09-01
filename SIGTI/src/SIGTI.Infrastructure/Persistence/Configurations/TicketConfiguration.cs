@@ -14,17 +14,29 @@ namespace SIGTI.Infrastructure.Persistence.Configurations
 
             builder.Property(x => x.Title).HasMaxLength(200).IsRequired();
 
-            builder.Property(x => x.Description).HasMaxLength(5000).IsRequired();
+            builder
+                .Property(x => x.Description)
+                .HasMaxLength(5000)
+                .IsRequired();
 
-            builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+            builder
+                .Property(x => x.Status)
+                .HasConversion<string>()
+                .HasMaxLength(30);
 
-            builder.Property(x => x.Priority).HasConversion<string>().HasMaxLength(30);
+            builder.Property(x => x.Priority);
 
-            builder.Property(x => x.Category).HasConversion<string>().HasMaxLength(30);
+            builder
+                .Property(x => x.Category)
+                .HasConversion<string>()
+                .HasMaxLength(30);
 
             builder.Property(x => x.Number).IsRequired();
 
-            builder.Property(x => x.DepartmentName).HasMaxLength(150).IsRequired();
+            builder
+                .Property(x => x.DepartmentName)
+                .HasMaxLength(150)
+                .IsRequired();
 
             builder.Ignore(x => x.Code);
 
@@ -64,8 +76,12 @@ namespace SIGTI.Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.TicketId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Navigation(x => x.Comments).UsePropertyAccessMode(PropertyAccessMode.Field);
-            builder.Navigation(x => x.Assignments).UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder
+                .Navigation(x => x.Comments)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder
+                .Navigation(x => x.Assignments)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

@@ -286,5 +286,92 @@ namespace SIGTI.Infrastructure.Tests.Repositories
             totalCountInProgress.Should().Be(1);
             totalCountResolved.Should().Be(1);
         }
+
+        [Fact]
+        public async Task ListAsync_WithPrioritySortAscending_ShouldReturnTicketsOrdererByPriority()
+        {
+            // Arrange
+            var department = new DepartmentBuilder().Build();
+            var queue = new SupportQueueBuilder().Build();
+            var user = new UserBuilder().WithDepartment(department).Build();
+
+            var ticketCritical = new TicketBuilder()
+                .WithNumber(1)
+                .WithDepartment(department)
+                .WithQueue(queue)
+                .WithCreatedBy(user)
+                .WithPriority(TicketPriority.Critical)
+                .Build();
+
+            var ticketHigh = new TicketBuilder()
+                .WithNumber(2)
+                .WithDepartment(department)
+                .WithQueue(queue)
+                .WithCreatedBy(user)
+                .WithPriority(TicketPriority.High)
+                .Build();
+
+            var ticketMedium = new TicketBuilder()
+                .WithNumber(3)
+                .WithDepartment(department)
+                .WithQueue(queue)
+                .WithCreatedBy(user)
+                .WithPriority(TicketPriority.Medium)
+                .Build();
+
+            var ticketLow = new TicketBuilder()
+                .WithNumber(4)
+                .WithDepartment(department)
+                .WithQueue(queue)
+                .WithCreatedBy(user)
+                .WithPriority(TicketPriority.Low)
+                .Build();
+
+            await using (var setupContext = _fixture.CreateDbContext())
+            {
+                await setupContext.Departments.AddAsync(department);
+                await setupContext.SupportQueues.AddAsync(queue);
+                await setupContext.Users.AddAsync(user);
+
+                // Insert in disorder to garante that the db applies the ORDER BY
+                await setupContext.Tickets.AddRangeAsync(
+                    ticketHigh,
+                    ticketLow,
+                    ticketCritical,
+                    ticketMedium
+                );
+                await setupContext.SaveChangesAsync();
+
+                // act
+                IReadOnlyCollection<Ticket> result;
+                var filter = new TicketListFilter();
+
+                await using (var actContext = _fixture.CreateDbContext())
+                {
+                    var repository = new TicketRepository(actContext);
+                    result = await repository.ListAsync(
+                        filter,
+                        TicketSortField.Priority,
+                        SortDirection.Ascending,
+                        skip: 0,
+                        take: 10,
+                        cancellationToken: CancellationToken.None
+                    );
+                }
+
+                // Assert: check if sequence of priorities returned is ascending
+                result.Should().NotBeNull();
+                result.Should().HaveCount(4);
+                result
+                    .Select(ticket => ticket.Priority)
+                    .Should()
+                    .ContainInOrder(
+                        TicketPriority.Low,
+                        TicketPriority.Medium,
+                        TicketPriority.High,
+                        TicketPriority.Critical
+                    );
+            }
+        }
     }
 }
