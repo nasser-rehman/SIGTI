@@ -5,6 +5,7 @@ using SIGTI.Domain.Entities;
 using SIGTI.Domain.Enums;
 using SIGTI.Domain.Tests.Builders;
 using SIGTI.Infrastructure.Persistence.Repositories;
+using SIGTI.Infrastructure.Tests.Extensions;
 using SIGTI.Infrastructure.Tests.Fixtures;
 
 namespace SIGTI.Infrastructure.Tests.Repositories
@@ -21,7 +22,7 @@ namespace SIGTI.Infrastructure.Tests.Repositories
 
         public async Task InitializeAsync()
         {
-            // Limpa todas as tabelas antes de cada teste executar
+            // Reset database state before each test run
             await _fixture.ResetDatabaseAsync();
         }
 
@@ -30,32 +31,31 @@ namespace SIGTI.Infrastructure.Tests.Repositories
         [Fact]
         public async Task ListAsync_Without_Filters_Should_Return_All_Paginated_Tickets()
         {
-            // Arrange
-            var department = new DepartmentBuilder().Build();
-            var queue = new SupportQueueBuilder().Build();
-            var user = new UserBuilder().WithDepartment(department).Build();
-
-            var ticket1 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(user)
-                .Build();
-            var ticket2 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(user)
-                .Build();
-            var ticket3 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(user)
-                .Build();
+            // Arrange: Seed base entities and create multiple tickets
+            Ticket ticket1,
+                ticket2,
+                ticket3;
 
             await using (var setupContext = _fixture.CreateDbContext())
             {
-                await setupContext.Departments.AddAsync(department);
-                await setupContext.SupportQueues.AddAsync(queue);
-                await setupContext.Users.AddAsync(user);
+                var seed = await setupContext.SeedBasicTicketContextAsync();
+
+                ticket1 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .Build();
+                ticket2 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .Build();
+                ticket3 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .Build();
+
                 await setupContext.Tickets.AddRangeAsync(
                     ticket1,
                     ticket2,
@@ -77,7 +77,7 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                     SortDirection.Descending,
                     skip: 0,
                     take: 10,
-                    CancellationToken.None
+                    cancellationToken: CancellationToken.None
                 );
             }
 
@@ -92,69 +92,65 @@ namespace SIGTI.Infrastructure.Tests.Repositories
         [Fact]
         public async Task ListAsync_With_Technician_Filter_Should_Return_Only_Tickets_Currently_Assigned_To_Technician()
         {
-            // Arrange
-            var department = new DepartmentBuilder().Build();
-            var queue = new SupportQueueBuilder().WithName("Fila N 2").Build();
-
-            var createdBy = new UserBuilder()
-                .WithDepartment(department)
-                .WithEmail("createdBy@sigti.local")
-                .Build();
-            var techA = new UserBuilder()
-                .WithDepartment(department)
-                .WithEmail("technicianA@sigti.local")
-                .Build();
-            var techB = new UserBuilder()
-                .WithDepartment(department)
-                .WithEmail("technicianB@sigti.local")
-                .Build();
-
-            // Ticket 1: Active with TechA
-            var ticket1 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(createdBy)
-                .Build();
-
-            ticket1.AssignTechnician(
-                techA,
-                createdBy,
-                "Initial assignment to Tech A"
-            );
-
-            // Ticket 2: Active with TechB
-            var ticket2 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(createdBy)
-                .Build();
-
-            ticket2.AssignTechnician(
-                techB,
-                createdBy,
-                "Initial assignment to Tech B"
-            );
-
-            // Ticket 3: Assign to TechA first, then reassigned to TechB
-            var ticket3 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(createdBy)
-                .Build();
-
-            ticket3.AssignTechnician(
-                techA,
-                createdBy,
-                "Initial assignment to Tech A"
-            );
-
-            ticket3.AssignTechnician(techB, createdBy, "Transferred to Tech B");
+            // Arrange: Seed base context and add second technician for reassignment verification
+            BasicTicketContext seed;
+            User techB;
+            Ticket ticket1,
+                ticket2,
+                ticket3;
 
             await using (var setupContext = _fixture.CreateDbContext())
             {
-                await setupContext.Departments.AddAsync(department);
-                await setupContext.SupportQueues.AddAsync(queue);
-                await setupContext.Users.AddRangeAsync(createdBy, techA, techB);
+                seed = await setupContext.SeedBasicTicketContextAsync();
+
+                techB = new UserBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithEmail("technicianB@sigti.local")
+                    .Build();
+
+                await setupContext.Users.AddAsync(techB);
+
+                // Ticket 1: Active with seed.Technician (Tech A)
+                ticket1 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .Build();
+                ticket1.AssignTechnician(
+                    seed.Technician,
+                    seed.CreatedBy,
+                    "Initial assignment to Tech A"
+                );
+
+                // Ticket 2: Active with Tech B
+                ticket2 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .Build();
+                ticket2.AssignTechnician(
+                    techB,
+                    seed.CreatedBy,
+                    "Initial assignment to Tech B"
+                );
+
+                // Ticket 3: Assigned to Tech A first, then reassigned to Tech B
+                ticket3 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .Build();
+                ticket3.AssignTechnician(
+                    seed.Technician,
+                    seed.CreatedBy,
+                    "Initial assignment to Tech A"
+                );
+                ticket3.AssignTechnician(
+                    techB,
+                    seed.CreatedBy,
+                    "Transferred to Tech B"
+                );
+
                 await setupContext.Tickets.AddRangeAsync(
                     ticket1,
                     ticket2,
@@ -163,8 +159,11 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                 await setupContext.SaveChangesAsync();
             }
 
-            // Act: Query filtering by TechA
-            var filter = new TicketListFilter { TechnicianId = techA.Id };
+            // Act: Query filtering strictly by seed.Technician
+            var filter = new TicketListFilter
+            {
+                TechnicianId = seed.Technician.Id,
+            };
 
             IReadOnlyCollection<Ticket> result;
             await using (var actContext = _fixture.CreateDbContext())
@@ -180,7 +179,7 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                 );
             }
 
-            // Assert: Must return only Ticket 1
+            // Assert: Must return only ticket1
             result.Should().NotBeNull();
             result.Should().HaveCount(1);
             result.First().Id.Should().Be(ticket1.Id);
@@ -189,56 +188,54 @@ namespace SIGTI.Infrastructure.Tests.Repositories
         [Fact]
         public async Task CountAsync_WithStatusFilter_ShouldReturnOnlyCountOfMatchingTickets()
         {
-            // arrange
-            var department = new DepartmentBuilder().Build();
-            var queue = new SupportQueueBuilder().Build();
-            var createdBy = new UserBuilder()
-                .WithDepartment(department)
-                .Build();
-
-            var tech = new UserBuilder()
-                .WithDepartment(department)
-                .WithEmail("technicianTI@sigti.local")
-                .Build();
-
-            // 2 tickets with status New
-            var ticket1 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithCreatedBy(createdBy)
-                .WithQueue(queue)
-                .Build();
-            var ticket2 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithCreatedBy(createdBy)
-                .WithQueue(queue)
-                .Build();
-
-            // 1 Ticket with status InProgress
-            var ticket3 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithCreatedBy(createdBy)
-                .WithQueue(queue)
-                .Build();
-
-            ticket3.AssignTechnician(tech, createdBy, "Auto assignment");
-            ticket3.StartService();
-
-            // 1 Ticket with status Resolved
-            var ticket4 = new TicketBuilder()
-                .WithDepartment(department)
-                .WithCreatedBy(createdBy)
-                .WithQueue(queue)
-                .Build();
-
-            ticket4.AssignTechnician(tech, createdBy, "Auto assignment");
-            ticket4.StartService();
-            ticket4.Resolve();
+            // Arrange: Seed base context and populate tickets in multiple lifecycle states
+            int totalCountNew,
+                totalCountInProgress,
+                totalCountResolved;
 
             await using (var setupContext = _fixture.CreateDbContext())
             {
-                await setupContext.Departments.AddAsync(department);
-                await setupContext.SupportQueues.AddAsync(queue);
-                await setupContext.Users.AddRangeAsync(createdBy, tech);
+                var seed = await setupContext.SeedBasicTicketContextAsync();
+
+                // 2 tickets with status New
+                var ticket1 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithQueue(seed.Queue)
+                    .Build();
+                var ticket2 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithQueue(seed.Queue)
+                    .Build();
+
+                // 1 ticket with status InProgress
+                var ticket3 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithQueue(seed.Queue)
+                    .Build();
+                ticket3.AssignTechnician(
+                    seed.Technician,
+                    seed.CreatedBy,
+                    "Auto assignment"
+                );
+                ticket3.StartService();
+
+                // 1 ticket with status Resolved
+                var ticket4 = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithQueue(seed.Queue)
+                    .Build();
+                ticket4.AssignTechnician(
+                    seed.Technician,
+                    seed.CreatedBy,
+                    "Auto assignment"
+                );
+                ticket4.StartService();
+                ticket4.Resolve();
+
                 await setupContext.Tickets.AddRangeAsync(
                     ticket1,
                     ticket2,
@@ -248,10 +245,7 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                 await setupContext.SaveChangesAsync();
             }
 
-            // act
-            int totalCountNew,
-                totalCountInProgress,
-                totalCountResolved;
+            // Act
             var filterNew = new TicketListFilter { Status = TicketStatus.New };
             var filterInProgress = new TicketListFilter
             {
@@ -269,12 +263,10 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                     filterNew,
                     cancellationToken: CancellationToken.None
                 );
-
                 totalCountInProgress = await repository.CountAsync(
                     filterInProgress,
                     cancellationToken: CancellationToken.None
                 );
-
                 totalCountResolved = await repository.CountAsync(
                     filterResolved,
                     cancellationToken: CancellationToken.None
@@ -290,50 +282,46 @@ namespace SIGTI.Infrastructure.Tests.Repositories
         [Fact]
         public async Task ListAsync_WithPrioritySortAscending_ShouldReturnTicketsOrdererByPriority()
         {
-            // Arrange
-            var department = new DepartmentBuilder().Build();
-            var queue = new SupportQueueBuilder().Build();
-            var user = new UserBuilder().WithDepartment(department).Build();
-
-            var ticketCritical = new TicketBuilder()
-                .WithNumber(1)
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(user)
-                .WithPriority(TicketPriority.Critical)
-                .Build();
-
-            var ticketHigh = new TicketBuilder()
-                .WithNumber(2)
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(user)
-                .WithPriority(TicketPriority.High)
-                .Build();
-
-            var ticketMedium = new TicketBuilder()
-                .WithNumber(3)
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(user)
-                .WithPriority(TicketPriority.Medium)
-                .Build();
-
-            var ticketLow = new TicketBuilder()
-                .WithNumber(4)
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(user)
-                .WithPriority(TicketPriority.Low)
-                .Build();
+            // Arrange: Prepare tickets with distinct priorities
+            Ticket ticketCritical,
+                ticketHigh,
+                ticketMedium,
+                ticketLow;
 
             await using (var setupContext = _fixture.CreateDbContext())
             {
-                await setupContext.Departments.AddAsync(department);
-                await setupContext.SupportQueues.AddAsync(queue);
-                await setupContext.Users.AddAsync(user);
+                var seed = await setupContext.SeedBasicTicketContextAsync();
 
-                // Insert in disorder to garante that the db applies the ORDER BY
+                ticketCritical = new TicketBuilder()
+                    .WithNumber(1)
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithPriority(TicketPriority.Critical)
+                    .Build();
+                ticketHigh = new TicketBuilder()
+                    .WithNumber(2)
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithPriority(TicketPriority.High)
+                    .Build();
+                ticketMedium = new TicketBuilder()
+                    .WithNumber(3)
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithPriority(TicketPriority.Medium)
+                    .Build();
+                ticketLow = new TicketBuilder()
+                    .WithNumber(4)
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .WithPriority(TicketPriority.Low)
+                    .Build();
+
+                // Insert in disorder to guarantee that the database applies ORDER BY
                 await setupContext.Tickets.AddRangeAsync(
                     ticketHigh,
                     ticketLow,
@@ -341,92 +329,71 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                     ticketMedium
                 );
                 await setupContext.SaveChangesAsync();
-
-                // act
-                IReadOnlyCollection<Ticket> result;
-                var filter = new TicketListFilter();
-
-                await using (var actContext = _fixture.CreateDbContext())
-                {
-                    var repository = new TicketRepository(actContext);
-                    result = await repository.ListAsync(
-                        filter,
-                        TicketSortField.Priority,
-                        SortDirection.Ascending,
-                        skip: 0,
-                        take: 10,
-                        cancellationToken: CancellationToken.None
-                    );
-                }
-
-                // Assert: check if sequence of priorities returned is ascending
-                result.Should().NotBeNull();
-                result.Should().HaveCount(4);
-                result
-                    .Select(ticket => ticket.Priority)
-                    .Should()
-                    .ContainInOrder(
-                        TicketPriority.Low,
-                        TicketPriority.Medium,
-                        TicketPriority.High,
-                        TicketPriority.Critical
-                    );
             }
+
+            // Act
+            IReadOnlyCollection<Ticket> result;
+            var filter = new TicketListFilter();
+
+            await using (var actContext = _fixture.CreateDbContext())
+            {
+                var repository = new TicketRepository(actContext);
+                result = await repository.ListAsync(
+                    filter,
+                    TicketSortField.Priority,
+                    SortDirection.Ascending,
+                    skip: 0,
+                    take: 10,
+                    cancellationToken: CancellationToken.None
+                );
+            }
+
+            // Assert: Verify ascending priority order
+            result.Should().NotBeNull();
+            result.Should().HaveCount(4);
+            result
+                .Select(ticket => ticket.Priority)
+                .Should()
+                .ContainInOrder(
+                    TicketPriority.Low,
+                    TicketPriority.Medium,
+                    TicketPriority.High,
+                    TicketPriority.Critical
+                );
         }
 
         [Fact]
         public async Task GetByIdAsync_WhenTicketExists_ShouldReturnTicketWithAllNavigationsLoaded()
         {
             // Arrange: Build aggregate graph with department, queue, assignments, comments, and audit histories
-            var department = new DepartmentBuilder().Build();
-            var queue = new SupportQueueBuilder().Build();
-
-            var createdBy = new UserBuilder()
-                .WithEmail("create@sigti.local")
-                .WithDepartment(department)
-                .WithRole(Role.User)
-                .Build();
-            var assigner = new UserBuilder()
-                .WithEmail("administrator@sigti.local")
-                .WithRole(Role.Administrator)
-                .WithDepartment(department)
-                .Build();
-            var technician = new UserBuilder()
-                .WithEmail("tech@sigti.local")
-                .WithDepartment(department)
-                .WithRole(Role.Technician)
-                .Build();
-
-            var ticket = new TicketBuilder()
-                .WithDepartment(department)
-                .WithQueue(queue)
-                .WithCreatedBy(createdBy)
-                .Build();
-
-            // Attach assignment history
-            ticket.AssignTechnician(
-                technician,
-                assigner,
-                "Initial assignment for triage"
-            );
-
-            // Attach comment by the assigner (e.g., triage technician / manager)
-            var comment = new Comment(
-                "Ticket assigned to infrastructure specialist.",
-                ticket,
-                assigner
-            );
-            ticket.AddComment(comment);
+            BasicTicketContext seed;
+            Ticket ticket;
 
             await using (var setupContext = _fixture.CreateDbContext())
             {
-                await setupContext.Departments.AddAsync(department);
-                await setupContext.SupportQueues.AddAsync(queue);
-                await setupContext.Users.AddRangeAsync(
-                    createdBy,
-                    assigner,
-                    technician
+                seed = await setupContext.SeedBasicTicketContextAsync();
+
+                ticket = new TicketBuilder()
+                    .WithDepartment(seed.Department)
+                    .WithQueue(seed.Queue)
+                    .WithCreatedBy(seed.CreatedBy)
+                    .Build();
+
+                // Attach assignment history
+                ticket.AssignTechnician(
+                    seed.Technician,
+                    seed.CreatedBy,
+                    "Initial assignment for triage"
                 );
+
+                // Attach comment
+                var comment = new Comment(
+                    "Ticket assigned to infrastructure specialist.",
+                    ticket,
+                    seed.CreatedBy
+                );
+                ticket.AddComment(comment);
+
                 await setupContext.Tickets.AddAsync(ticket);
                 await setupContext.SaveChangesAsync();
             }
@@ -448,27 +415,27 @@ namespace SIGTI.Infrastructure.Tests.Repositories
 
             // Direct navigations
             result.Department.Should().NotBeNull();
-            result.Department.Id.Should().Be(department.Id);
+            result.Department.Id.Should().Be(seed.Department.Id);
 
             result.CreatedBy.Should().NotBeNull();
-            result.CreatedBy.Id.Should().Be(createdBy.Id);
+            result.CreatedBy.Id.Should().Be(seed.CreatedBy.Id);
 
             result.Queue.Should().NotBeNull();
-            result.Queue.Id.Should().Be(queue.Id);
+            result.Queue.Id.Should().Be(seed.Queue.Id);
 
             // Collection: Assignments + nested navigations (Technician & AssignedBy)
             result.Assignments.Should().HaveCount(1);
             var loadedAssignment = result.Assignments.First();
             loadedAssignment.Technician.Should().NotBeNull();
-            loadedAssignment.Technician.Id.Should().Be(technician.Id);
+            loadedAssignment.Technician.Id.Should().Be(seed.Technician.Id);
             loadedAssignment.AssignedBy.Should().NotBeNull();
-            loadedAssignment.AssignedBy.Id.Should().Be(assigner.Id);
+            loadedAssignment.AssignedBy.Id.Should().Be(seed.CreatedBy.Id);
 
             // Collection: Comments + Author navigation
             result.Comments.Should().HaveCount(1);
             var loadedComment = result.Comments.First();
             loadedComment.Author.Should().NotBeNull();
-            loadedComment.Author.Id.Should().Be(assigner.Id);
+            loadedComment.Author.Id.Should().Be(seed.CreatedBy.Id);
 
             // Collection: Histories (Audit trail)
             result.Assignments.Should().NotBeNull();
