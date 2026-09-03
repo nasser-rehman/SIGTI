@@ -266,6 +266,10 @@ namespace SIGTI.Infrastructure.Tests.Repositories
                 .Select(department => department!.Id)
                 .Should()
                 .Contain(new[] { departmentOne.Id, departmentFour.Id });
+            result
+                .Select(department => department.Id)
+                .Should()
+                .NotContain(new[] { departmentTwo.Id, departmentThree.Id });
         }
     }
 }
