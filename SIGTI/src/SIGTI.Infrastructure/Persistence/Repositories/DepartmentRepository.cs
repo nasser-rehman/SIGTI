@@ -14,7 +14,10 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(Department department, CancellationToken cancellationToken)
+        public async Task AddAsync(
+            Department department,
+            CancellationToken cancellationToken
+        )
         {
             await _context.Departments.AddAsync(department, cancellationToken);
         }
@@ -40,11 +43,17 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<bool> ExistsAsync(Guid departmentId, CancellationToken cancellationToken)
+        public async Task<bool> ExistsAsync(
+            Guid departmentId,
+            CancellationToken cancellationToken
+        )
         {
             return await _context
                 .Departments.AsNoTracking()
-                .AnyAsync(department => department.Id == departmentId, cancellationToken);
+                .AnyAsync(
+                    department => department.Id == departmentId,
+                    cancellationToken
+                );
         }
 
         public async Task<bool> ExistsByNameAsync(
@@ -54,7 +63,10 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
         {
             return await _context
                 .Departments.AsNoTracking()
-                .AnyAsync(department => department.Name == departmentName, cancellationToken);
+                .AnyAsync(
+                    department => department.Name == departmentName,
+                    cancellationToken
+                );
         }
 
         public async Task<IReadOnlyCollection<Department>> ListActiveAsync(
