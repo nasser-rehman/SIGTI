@@ -2,7 +2,7 @@
 
 Sistema de Gerenciamento de Chamados de Tecnologia da Informação.
 
-O SIGTI é uma API para gerenciamento de chamados de suporte de TI, desenvolvida como projeto de estudo e portfólio com foco em arquitetura de software, Domain-Driven Design (DDD), Clean Architecture e CQRS.
+O SIGTI é uma API para gerenciamento de chamados de suporte de TI, desenvolvida como projeto de estudo e portfólio com foco em arquitetura de software, Domain-Driven Design (DDD), Clean Architecture, CQRS e testes automatizados.
 
 > 🚧 **Projeto em desenvolvimento.**
 
@@ -20,7 +20,7 @@ O SIGTI tem como objetivo centralizar o gerenciamento de chamados de suporte té
 - Controle de prioridade e categoria;
 - Histórico de atribuições;
 - Comentários;
-- Paginação, filtros e ordenação.
+- Paginação, filtros e ordenação dinâmica.
 
 A aplicação está sendo construída de forma incremental, buscando manter as regras de negócio concentradas no domínio e separar claramente as responsabilidades de cada camada.
 
@@ -40,22 +40,21 @@ SIGTI
 │
 └── tests
     ├── SIGTI.Application.Tests
-    └── SIGTI.Domain.Tests
+    ├── SIGTI.Domain.Tests
     └── SIGTI.Infrastructure.Tests
 ```
 
 ### SIGTI.Domain
 
-Contém as regras e conceitos centrais do sistema.
+Contém as regras e conceitos centrais do sistema. Sem dependências externas.
 
 Entre os principais componentes estão:
 
-- Entities;
+- Entities e Aggregates;
 - Value Objects;
-- Enums;
+- Enums com peso semântico (ex: Prioridades ordenadas);
 - Domain Exceptions;
-- Factories;
-- Regras de negócio.
+- Regras e invariantes de negócio.
 
 Principais entidades:
 
@@ -71,29 +70,26 @@ Principais entidades:
 
 ### SIGTI.Application
 
-Contém os casos de uso da aplicação.
+Contém os casos de uso da aplicação. Orquestrada utilizando Commands e Queries através do MediatR.
 
-A comunicação é organizada utilizando Commands e Queries através do MediatR.
-
-Exemplos:
+Exemplo de fluxo:
 
 ```text
-Commands
-└── CreateTicket
+Commands (Escrita)
+└── CreateTicketCommand
 
-Queries
-├── GetTicketById
-└── ListTickets
+Queries (Leitura)
+├── GetTicketByIdQuery
+└── ListTicketsQuery
 ```
 
 A camada também contém:
 
-- Validators;
+- Validators (FluentValidation);
 - Pipeline Behaviors;
 - DTOs/Responses;
-- Interfaces de persistência;
-- Interfaces de serviços;
-- Modelos compartilhados, como paginação.
+- Interfaces de persistência e serviços;
+- Modelos compartilhados (Paginação).
 
 ---
 
@@ -105,178 +101,103 @@ Inclui:
 
 - Entity Framework Core;
 - PostgreSQL;
-- Repositories;
-- Unit of Work;
-- Configurações de persistência;
+- Repositories e Unit of Work;
+- Configurações de mapeamento (Fluent API);
+- Migrations seguras;
 - Database Seeder;
-- Geração sequencial dos números dos tickets;
-- Serviços de infraestrutura.
-
-A numeração dos tickets utiliza uma PostgreSQL Sequence para gerar números sequenciais.
+- Geração atômica dos números dos tickets via PostgreSQL Sequence.
 
 ---
 
 ### SIGTI.API
 
-É a camada de entrada da aplicação.
+É a camada de entrada da aplicação HTTP/REST.
 
 Responsável por:
 
 - Controllers;
-- Configuração da aplicação;
-- Dependency Injection;
-- Exception Handling;
-- Swagger/OpenAPI;
-- Exposição dos endpoints HTTP.
+- Injeção de Dependência (DI);
+- Exception Handling centralizado (Problem Details);
+- Swagger/OpenAPI.
 
 ---
 
 ## Principais conceitos utilizados
 
 ### Domain-Driven Design
-
-As principais regras de negócio permanecem no domínio.
+As principais regras de negócio permanecem no domínio, encapsuladas. O estado só é alterado através de métodos de negócio que garantem consistência.
 
 Exemplo:
-
 ```csharp
 queue.AddMember(technician, maxConcurrentTickets);
+ticket.AssignTechnician(technician, assignedBy, "Motivo da atribuição");
 ```
 
-A própria entidade `SupportQueue` é responsável por controlar a inclusão de membros na fila.
-
----
-
-### CQRS
-
-Commands representam operações que alteram o estado da aplicação.
-
-Queries representam operações de leitura.
-
-Exemplo:
-
-```text
-CreateTicketCommand
-        ↓
-     escrita
-
-GetTicketByIdQuery
-        ↓
-      leitura
-```
-
----
-
-### MediatR
-
-Utilizado para desacoplar Controllers dos casos de uso e implementar o fluxo de Commands, Queries e Pipeline Behaviors.
-
----
-
-### FluentValidation
-
-Utilizado para validar dados de entrada antes da execução dos casos de uso.
-
-A validação é integrada ao pipeline do MediatR através de um `ValidationBehavior`.
-
----
+### CQRS e MediatR
+Separação clara entre operações de mutação de estado (Commands) e consultas otimizadas (Queries), mediadas pelo pipeline do MediatR que também orquestra os comportamentos transversais (como validação).
 
 ### Repository + Unit of Work
-
-A persistência é abstraída através de interfaces na Application e implementações na Infrastructure.
-
----
-
-### Exception Handling
-
-Exceções da aplicação são tratadas centralizadamente através de um Global Exception Handler, retornando respostas HTTP padronizadas.
+A persistência é abstraída, permitindo testabilidade e garantindo que as transações de banco de dados (Unit of Work) ocorram apenas quando o caso de uso for concluído com sucesso.
 
 ---
 
 ## Funcionalidades implementadas
 
 ### Tickets
-
 - [x] Criar ticket;
-- [x] Geração automática de número;
-- [x] Atribuição automática de técnico;
-- [x] Buscar ticket por ID;
+- [x] Geração automática e sequencial de número;
+- [x] Atribuição automática de técnico baseado na fila;
+- [x] Buscar ticket por ID (carregamento de grafo de relacionamentos);
 - [x] Listar tickets;
-- [x] Paginação;
-- [x] Filtros;
-- [x] Ordenação;
-- [x] Controle de prioridade;
-- [x] Controle de categoria;
-- [x] Histórico de atribuições;
+- [x] Paginação dinâmica (`PagedResult<T>`);
+- [x] Filtros multifatoriais;
+- [x] Ordenação customizada;
+- [x] Controle de prioridade e categoria;
+- [x] Histórico completo de atribuições;
 - [x] Comentários no domínio.
 
 ### Infraestrutura
-
-- [x] Entity Framework Core;
-- [x] PostgreSQL;
-- [x] Migrations;
-- [x] Database Seeder;
-- [x] Dependency Injection;
+- [x] Entity Framework Core & PostgreSQL (Npgsql);
+- [x] Migrations estruturadas;
+- [x] Database Seeder para ambiente de desenvolvimento;
 - [x] Global Exception Handler;
-- [x] Swagger/OpenAPI;
-- [x] PostgreSQL Sequence para numeração dos tickets.
+- [x] Swagger/OpenAPI.
 
 ### Testes
-
-- [x] Testes de domínio;
-- [x] Testes de Commands;
-- [x] Testes de Queries;
+- [x] Testes de Domínio (Invariantes e Regras);
+- [x] Testes de Commands e Queries;
 - [x] Testes de Validators;
-- [x] Testes com Moq para isolamento de dependências na Application.
+- [x] Testes com Moq para isolamento na camada Application;
+- [x] Testes de Integração de Repositórios com PostgreSQL e Respawn.
 
 ---
 
 ## Paginação, filtros e ordenação
 
-A listagem de tickets suporta paginação através de `PagedResult<T>`.
-
-Exemplo:
+A listagem de tickets suporta consultas dinâmicas de alta performance:
 
 ```http
-GET /api/tickets?page=1&pageSize=20
+GET /api/tickets?page=1&pageSize=20&status=InProgress&priority=High&sortBy=Priority&sortDirection=Ascending
 ```
 
-Os resultados podem ser filtrados por critérios como:
-
-- Status;
-- Prioridade;
-- Categoria;
-- Departamento;
-- Fila;
-- Técnico.
-
-Também é possível controlar a ordenação por campos definidos pela aplicação.
-
-Exemplo conceitual:
-
-```http
-GET /api/tickets?page=1&pageSize=20&sortBy=Priority&sortDirection=Ascending
-```
+Os resultados podem ser filtrados por status, prioridade, categoria, departamento, fila e técnico atual.
 
 ---
 
-## Testes
+## Estratégia de Testes
 
 Os testes estão separados por responsabilidade e nível de isolamento:
 
 ```text
 tests
-├── SIGTI.Domain.Tests           # Regras puras de negócio e invariantes do domínio
-├── SIGTI.Application.Tests      # Casos de uso com mocks de dependências (Moq)
-└── SIGTI.Infrastructure.Tests   # Testes de integração reais contra PostgreSQL usando Respawn
+├── SIGTI.Domain.Tests           # Regras puras de negócio e invariantes, sem I/O.
+├── SIGTI.Application.Tests      # Casos de uso com mocks de dependências (Moq).
+└── SIGTI.Infrastructure.Tests   # Testes de integração reais contra PostgreSQL.
 ```
 
-Domínio: Valida entidades, value objects e transições de estado.
+Os testes de integração utilizam a biblioteca **Respawn** para isolar cada cenário, truncando os dados de forma determinística e garantindo validações precisas de Migrations, ordenações (ex: por severidade de prioridade) e relacionamentos complexos (`Include`).
 
-Application: Valida o pipeline do MediatR, handlers, validações e DTOs.
-
-Infrastructure: Executa testes de repositórios contra uma instância real de PostgreSQL, validando migrations, queries complexas, ordenações e carregamento eager de relacionamentos (Include/ThenInclude), isolando cada teste via truncamento com Respawn.
-
+Para executar todos os testes da solução:
 ```bash
 dotnet test
 ```
@@ -285,7 +206,7 @@ dotnet test
 
 ## Tecnologias
 
-- C# /  .NET
+- C# / .NET
 - ASP.NET Core
 - Entity Framework Core & PostgreSQL (Npgsql)
 - MediatR & FluentValidation
@@ -298,105 +219,64 @@ dotnet test
 ## Executando o projeto
 
 ### Pré-requisitos
-
 - .NET SDK;
 - PostgreSQL;
-- Banco de dados configurado para a aplicação.
+- Banco de dados configurado.
 
 ### Configuração
-
-Configure a connection string no ambiente de desenvolvimento da API.
-
-Exemplo:
+Configure a connection string em `appsettings.Development.json` no projeto `SIGTI.API`:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=SIGTI;Username=postgres;Password=sua-senha"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=SIGTI_Dev;Username=postgres;Password=sua-senha"
   }
 }
 ```
 
-> Nunca versione credenciais reais no repositório.
-
-### Executando as migrations
-
+### Aplicando Migrations
 ```bash
-dotnet ef database update
+dotnet ef database update -p src/SIGTI.Infrastructure -s src/SIGTI.API
 ```
 
 ### Executando a API
-
 ```bash
 dotnet run --project src/SIGTI.API
 ```
-
-Em ambiente de desenvolvimento, a API disponibiliza a documentação através de Swagger/OpenAPI.
+Acesse a documentação interativa pelo Swagger gerado localmente.
 
 ---
 
 ## Banco de dados e Seed
 
-Na inicialização da aplicação, o `DatabaseSeeder` prepara os dados básicos necessários ao ambiente de desenvolvimento.
-
-Atualmente o cenário inicial contempla:
-
+Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais para testes locais:
 - Departamento de Tecnologia da Informação;
 - Fila de Suporte Técnico;
-- Usuário do sistema;
-- Usuário técnico;
-- Associação do técnico à fila.
-
-O objetivo do seed é deixar o ambiente pronto para testar o fluxo de criação e atribuição automática de chamados.
-
----
-
-## Status do projeto
-
-O projeto encontra-se em desenvolvimento.
-
-O objetivo atual é continuar expandindo os casos de uso do sistema e fortalecer sua cobertura de testes, mantendo as regras de negócio encapsuladas no domínio e a separação de responsabilidades entre as camadas.
+- Usuários e Técnicos associados.
 
 ---
 
 ## Próximos passos
 
-Algumas funcionalidades planejadas:
-
-- [ ] Assumir atendimento;
 - [x] Iniciar atendimento;
-- [ ] Transferir ticket;
 - [x] Resolver ticket;
-- [ ] Fechar ticket;
-- [ ] Reabrir ticket;
-- [ ] Histórico completo do ticket;
-- [ ] Autenticação e autorização;
-- [ ] Gestão de usuários;
-- [ ] Gestão de departamentos;
-- [ ] Gestão de filas;
-- [ ] Dashboard;
-- [ ] SLA;
-- [x] Testes de integração.
+- [x] Testes de Integração (Repositórios e Infraestrutura);
+- [ ] Assumir atendimento (manualmente);
+- [ ] Transferir ticket entre filas/departamentos;
+- [ ] Fechar e Reabrir ticket;
+- [ ] Histórico/Auditoria completa do ticket;
+- [ ] Autenticação e Autorização (JWT);
+- [ ] Gestão completa de Usuários, Departamentos e Filas;
+- [ ] Testes End-to-End (E2E) na API.
 
 ---
 
 ## Objetivo
 
-Além de construir um sistema funcional de gerenciamento de chamados, o SIGTI está sendo desenvolvido como um projeto de aprendizado contínuo em:
-
-- Arquitetura de software;
-- Domain-Driven Design;
-- Clean Architecture;
-- CQRS;
-- Desenvolvimento de APIs;
-- Persistência com Entity Framework Core;
-- Testes automatizados;
-- Boas práticas no ecossistema .NET.
-
-O foco do projeto não está apenas em desenvolver funcionalidades, mas também em compreender e aplicar os princípios por trás das decisões arquiteturais.
+O SIGTI é desenvolvido como um projeto de aprendizado prático e contínuo. O foco central não está apenas em entregar endpoints, mas em aplicar metodologias profissionais da indústria, entender as contrapartidas de cada decisão arquitetural e garantir a confiabilidade do software através da pirâmide de testes.
 
 ---
 
 ## Licença
 
-Este projeto ainda não possui uma licença definida.
+Este projeto não possui uma licença definida no momento.
