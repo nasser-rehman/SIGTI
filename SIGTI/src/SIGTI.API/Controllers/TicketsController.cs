@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Common.Exceptions;
 using SIGTI.Application.Features.Tickets.Commands.CreateTicket;
+using SIGTI.Application.Features.Tickets.Commands.StartTicketService;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
 
@@ -19,10 +20,16 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateTicketCommand command)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateTicketCommand command
+        )
         {
             var result = await _sender.Send(command);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = result.Id },
+                result
+            );
         }
 
         [HttpGet("{id:guid}")]
@@ -41,6 +48,19 @@ namespace SIGTI.API.Controllers
             var response = await _sender.Send(query, cancellationToken);
 
             return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/start")]
+        public async Task<IActionResult> Start(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            await _sender.Send(
+                new StartTicketServiceCommand(id),
+                cancellationToken
+            );
+            return NoContent();
         }
 
         // ├── POST   /api/tickets
