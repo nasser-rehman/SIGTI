@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Common.Exceptions;
 using SIGTI.Application.Features.Tickets.Commands.CreateTicket;
+using SIGTI.Application.Features.Tickets.Commands.DispatchTicket;
 using SIGTI.Application.Features.Tickets.Commands.StartTicketService;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
@@ -61,6 +62,25 @@ namespace SIGTI.API.Controllers
                 cancellationToken
             );
             return NoContent();
+        }
+
+        [HttpPatch("{id:guid}/dispatch")]
+        public async Task<IActionResult> Dispatch(
+            [FromRoute] Guid id,
+            [FromBody] DispatchTicketRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new DispatchTicketCommand(
+                id,
+                request.TechnicianId,
+                request.AssignedById,
+                request.Reason
+            );
+
+            var response = await _sender.Send(command, cancellationToken);
+
+            return Ok(response);
         }
 
         // ├── POST   /api/tickets

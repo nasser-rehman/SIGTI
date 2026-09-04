@@ -2,14 +2,14 @@ using FluentValidation;
 
 namespace SIGTI.Application.Features.Tickets.Commands.StartTicketService
 {
-    public class StartTicketServiceCommandValidator
+    public class StartTicketServiceValidator
         : AbstractValidator<StartTicketServiceCommand>
     {
-        public StartTicketServiceCommandValidator()
+        public StartTicketServiceValidator()
         {
             RuleFor(x => x.TicketId)
                 .NotEmpty()
-                .WithMessage("TicketId is required.");
+                .WithMessage("O identificador do ticket é obrigatório.");
         }
     }
 }
