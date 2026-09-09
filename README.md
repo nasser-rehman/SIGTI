@@ -76,13 +76,18 @@ Exemplo de fluxo:
 
 ```text
 Commands (Escrita)
-├── CreateTicketCommand
-├── DispatchTicketCommand
-├── StartTicketServiceCommand
-├── TransferTicketCommand
-├── AddCommentCommand
-├── ResolveTicketCommand
-└── CloseTicketCommand
+    ├── Tickets
+    │   ├── CreateTicketCommand
+    │   ├── DispatchTicketCommand
+    │   ├── StartTicketServiceCommand
+    │   ├── TransferTicketCommand
+    │   ├── AddCommentCommand
+    │   ├── ResolveTicketCommand
+    │   └── CloseTicketCommand
+    ├── SupportQueues
+    │   └── AddMemberCommand
+    └── Auth
+        └── LoginCommand
 
 Queries (Leitura)
 ├── GetTicketByIdQuery
@@ -168,7 +173,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - **Close (`/close`):** Transiciona para `Closed`. Válido apenas a partir de `Resolved`.
 - **Estados Terminais:** Chamados no estado `Closed` são definitivos e não podem ser reabertos para preservar a integridade histórica de SLA e MTTR.
 
-### Endpoints de Ciclo de Vida
+### Endpoints da API
+
+#### Tickets (Ciclo de Vida)
 
 - `POST /api/tickets` - Criação de chamado (`New`)
 - `GET /api/tickets/{id}` - Busca detalhada
@@ -181,6 +188,13 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - `POST /api/tickets/{id}/comments` - Adição de comentário ao chamado
 - `GET /api/tickets/{id}/comments` - Listagem cronológica dos comentários
 
+#### Autenticação
+
+- `POST /api/auth/login` - Autenticação de credenciais via BCrypt e geração de token JWT
+
+#### Filas de Suporte
+
+- `POST /api/support-queues/{id}/members` - Associação de técnico à fila com definição de limite concorrente (`MaxConcurrentTickets`)
 ---
 
 ## Funcionalidades implementadas
@@ -205,6 +219,19 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Listar comentários do chamado em ordem cronológica (`ListTicketCommentsQuery`);
 - [x] Transferir ticket entre filas e técnicos (`TransferTicketCommand`);
 
+### Filas de Suporte (Support Queues)
+- [x] Associação de técnicos a filas de atendimento (`AddMemberCommand`);
+- [x] Controle de capacidade simultânea por técnico (`MaxConcurrentTickets`);
+- [x] Prevenção de duplicidade e reativação de membros inativos na fila;
+- [x] Validação de papel de técnico no domínio (`technician.IsTechnician()`);
+- [x] Endpoint HTTP dedicado para gestão de membros (`SupportQueueController`);
+
+### Autenticação e Segurança (Auth)
+- [x] Autenticação via credenciais seguras com hash BCrypt (`LoginCommand`);
+- [x] Geração de token JWT com tempo de expiração e claims de usuário/papel;
+- [x] Extração de contexto e identidade via `ICurrentUserService`;
+- [x] Configuração de Swagger/OpenAPI com autenticação Bearer.
+
 ### Infraestrutura
 - [x] Entity Framework Core & PostgreSQL (Npgsql);
 - [x] Migrations estruturadas;
@@ -212,12 +239,11 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes
-- [x] Testes de Domínio (Invariantes e Regras);
-- [x] Testes de Commands e Queries;
-- [x] Testes de Validators;
-- [x] Testes com Moq para isolamento na camada Application;
-- [x] Testes de Integração de Repositórios com PostgreSQL e Respawn.
+### Testes Automatizados (151 testes aprovados)
+- [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);'
+- [x] Testes de Aplicação (56 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
+- [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
 
 ---
 
