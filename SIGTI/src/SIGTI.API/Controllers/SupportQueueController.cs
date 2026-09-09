@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.SupportQueues.Commands.AddMember;
+using SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueues;
 
 namespace SIGTI.API.Controllers
 {
@@ -29,6 +30,19 @@ namespace SIGTI.API.Controllers
             );
 
             var response = await _sender.Send(command, cancellationToken);
+
+            return Ok(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ListActive(
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new ListActiveSupportQueuesQuery(),
+                cancellationToken
+            );
 
             return Ok(response);
         }
