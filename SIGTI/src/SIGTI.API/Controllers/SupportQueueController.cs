@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.SupportQueues.Commands.AddMember;
+using SIGTI.Application.Features.SupportQueues.Commands.CreateSupportQueue;
+using SIGTI.Application.Features.SupportQueues.Commands.CreateSupportQueues;
 using SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueues;
 
 namespace SIGTI.API.Controllers
@@ -14,6 +16,26 @@ namespace SIGTI.API.Controllers
         public SupportQueueController(ISender sender)
         {
             _sender = sender;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(
+            [FromBody] CreateSupportQueueRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new CreateSupportQueueCommand(
+                request.Name,
+                request.Description
+            );
+
+            var response = await _sender.Send(command, cancellationToken);
+
+            return CreatedAtAction(
+                nameof(ListActive),
+                new { id = response.Id },
+                response
+            );
         }
 
         [HttpPost("{id:guid}/members")]
