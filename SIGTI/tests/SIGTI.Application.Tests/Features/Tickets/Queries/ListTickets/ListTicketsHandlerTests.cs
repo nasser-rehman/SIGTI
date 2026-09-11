@@ -8,7 +8,7 @@ using SIGTI.Domain.Enums;
 using SIGTI.Domain.Tests.Builders;
 using Xunit;
 
-namespace SIGTI.Application.Features.Tickets.Queries.ListTickets
+namespace SIGTI.Application.Tests.Features.Tickets.Queries.ListTickets
 {
     public sealed class ListTicketsHandlerTests
     {
@@ -38,7 +38,10 @@ namespace SIGTI.Application.Features.Tickets.Queries.ListTickets
 
             repository
                 .Setup(x =>
-                    x.CountAsync(It.IsAny<TicketListFilter>(), It.IsAny<CancellationToken>())
+                    x.CountAsync(
+                        It.IsAny<TicketListFilter>(),
+                        It.IsAny<CancellationToken>()
+                    )
                 )
                 .ReturnsAsync(2);
 
@@ -77,7 +80,10 @@ namespace SIGTI.Application.Features.Tickets.Queries.ListTickets
 
             repository
                 .Setup(x =>
-                    x.CountAsync(It.IsAny<TicketListFilter>(), It.IsAny<CancellationToken>())
+                    x.CountAsync(
+                        It.IsAny<TicketListFilter>(),
+                        It.IsAny<CancellationToken>()
+                    )
                 )
                 .ReturnsAsync(0);
 
@@ -121,13 +127,19 @@ namespace SIGTI.Application.Features.Tickets.Queries.ListTickets
 
             repository
                 .Setup(x =>
-                    x.CountAsync(It.IsAny<TicketListFilter>(), It.IsAny<CancellationToken>())
+                    x.CountAsync(
+                        It.IsAny<TicketListFilter>(),
+                        It.IsAny<CancellationToken>()
+                    )
                 )
                 .ReturnsAsync(0);
 
             var handler = new ListTicketsHandler(repository.Object);
 
-            var filter = new TicketListFilter { Priority = TicketPriority.Critical };
+            var filter = new TicketListFilter
+            {
+                Priority = TicketPriority.Critical,
+            };
 
             var query = new ListTicketsQuery
             {
@@ -141,7 +153,9 @@ namespace SIGTI.Application.Features.Tickets.Queries.ListTickets
             repository.Verify(
                 x =>
                     x.ListAsync(
-                        It.Is<TicketListFilter>(f => f.Priority == TicketPriority.Critical),
+                        It.Is<TicketListFilter>(f =>
+                            f.Priority == TicketPriority.Critical
+                        ),
                         It.IsAny<TicketSortField>(),
                         It.IsAny<SortDirection>(),
                         0,
@@ -172,7 +186,10 @@ namespace SIGTI.Application.Features.Tickets.Queries.ListTickets
 
             repository
                 .Setup(x =>
-                    x.CountAsync(It.IsAny<TicketListFilter>(), It.IsAny<CancellationToken>())
+                    x.CountAsync(
+                        It.IsAny<TicketListFilter>(),
+                        It.IsAny<CancellationToken>()
+                    )
                 )
                 .ReturnsAsync(0);
 
