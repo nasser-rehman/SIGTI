@@ -85,14 +85,18 @@ Commands (Escrita)
     │   ├── ResolveTicketCommand
     │   └── CloseTicketCommand
     ├── SupportQueues
+    │   ├── CreateSupportQueueCommand
     │   └── AddMemberCommand
     └── Auth
         └── LoginCommand
 
 Queries (Leitura)
-├── GetTicketByIdQuery
-├── ListTicketsQuery
-└── ListTicketsCommentsQuery
+├── Tickets
+│   ├── GetTicketByIdQuery
+│   ├── ListTicketsQuery
+│   └── ListTicketCommentsQuery
+└── SupportQueues
+    └── ListActiveSupportQueuesQuery
 ```
 
 A camada também contém:
@@ -194,7 +198,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 #### Filas de Suporte
 
+- `POST /api/support-queues` - Criação de fila de suporte com garantia de unicidade de nome
 - `POST /api/support-queues/{id}/members` - Associação de técnico à fila com definição de limite concorrente (`MaxConcurrentTickets`)
+- `GET /api/support-queues` - Listagem de filas de atendimento ativas
 ---
 
 ## Funcionalidades implementadas
@@ -220,11 +226,13 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Transferir ticket entre filas e técnicos (`TransferTicketCommand`);
 
 ### Filas de Suporte (Support Queues)
+- [x] Criação de filas de suporte com unicidade de nome (`CreateSupportQueueCommand`);
 - [x] Associação de técnicos a filas de atendimento (`AddMemberCommand`);
 - [x] Controle de capacidade simultânea por técnico (`MaxConcurrentTickets`);
 - [x] Prevenção de duplicidade e reativação de membros inativos na fila;
 - [x] Validação de papel de técnico no domínio (`technician.IsTechnician()`);
-- [x] Endpoint HTTP dedicado para gestão de membros (`SupportQueueController`);
+- [x] Listagem de filas ativas (`ListActiveSupportQueuesQuery`);
+- [x] Endpoints HTTP dedicados para gestão de filas e membros (`SupportQueueController`);
 
 ### Autenticação e Segurança (Auth)
 - [x] Autenticação via credenciais seguras com hash BCrypt (`LoginCommand`);
@@ -239,9 +247,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (151 testes aprovados)
-- [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);'
-- [x] Testes de Aplicação (56 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+### Testes Automatizados (164 testes aprovados)
+- [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
+- [x] Testes de Aplicação (69 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
 
