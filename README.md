@@ -87,6 +87,8 @@ Commands (Escrita)
     ├── SupportQueues
     │   ├── CreateSupportQueueCommand
     │   └── AddMemberCommand
+    ├── Departments
+    │   └── CreateDepartmentCommand
     └── Auth
         └── LoginCommand
 
@@ -95,8 +97,10 @@ Queries (Leitura)
 │   ├── GetTicketByIdQuery
 │   ├── ListTicketsQuery
 │   └── ListTicketCommentsQuery
-└── SupportQueues
-    └── ListActiveSupportQueuesQuery
+├── SupportQueues
+│   └── ListActiveSupportQueuesQuery
+└── Departments
+    └── ListActiveDepartmentsQuery
 ```
 
 A camada também contém:
@@ -201,6 +205,11 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - `POST /api/support-queues` - Criação de fila de suporte com garantia de unicidade de nome
 - `POST /api/support-queues/{id}/members` - Associação de técnico à fila com definição de limite concorrente (`MaxConcurrentTickets`)
 - `GET /api/support-queues` - Listagem de filas de atendimento ativas
+
+#### Departamentos
+
+- `POST /api/departments` - Criação de departamento com garantia de unicidade de nome
+- `GET /api/departments` - Listagem de departamentos ativos
 ---
 
 ## Funcionalidades implementadas
@@ -234,6 +243,11 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Listagem de filas ativas (`ListActiveSupportQueuesQuery`);
 - [x] Endpoints HTTP dedicados para gestão de filas e membros (`SupportQueueController`);
 
+### Departamentos (Departments)
+- [x] Criação de departamentos com garantia de unicidade de nome (`CreateDepartmentCommand`);
+- [x] Listagem de departamentos ativos (`ListActiveDepartmentsQuery`);
+- [x] Endpoints HTTP dedicados (`DepartmentController`);
+
 ### Autenticação e Segurança (Auth)
 - [x] Autenticação via credenciais seguras com hash BCrypt (`LoginCommand`);
 - [x] Geração de token JWT com tempo de expiração e claims de usuário/papel;
@@ -247,9 +261,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (164 testes aprovados)
+### Testes Automatizados (176 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (69 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (81 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
 
