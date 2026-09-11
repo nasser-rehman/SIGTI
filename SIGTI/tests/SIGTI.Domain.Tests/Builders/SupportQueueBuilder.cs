@@ -1,12 +1,13 @@
-using SIGTI.Domain.Entities;
 using System;
+using SIGTI.Domain.Entities;
 
 namespace SIGTI.Domain.Tests.Builders
 {
     public class SupportQueueBuilder
     {
         private string _name = "Fila N1";
-        private string _description = "Atendimento de primeiro nível (helpdesk).";
+        private string _description =
+            "Atendimento de primeiro nível (helpdesk).";
 
         public SupportQueueBuilder WithName(string name)
         {

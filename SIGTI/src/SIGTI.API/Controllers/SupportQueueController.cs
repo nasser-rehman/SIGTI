@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.SupportQueues.Commands.AddMember;
 using SIGTI.Application.Features.SupportQueues.Commands.CreateSupportQueue;
-using SIGTI.Application.Features.SupportQueues.Commands.CreateSupportQueues;
 using SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueues;
 
 namespace SIGTI.API.Controllers
