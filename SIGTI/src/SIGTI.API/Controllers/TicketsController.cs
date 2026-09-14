@@ -12,6 +12,7 @@ using SIGTI.Application.Features.Tickets.Commands.TransferTicket;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
 using SIGTI.Application.Features.Tickets.Queries.ListTicketComments;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
+using SIGTI.Domain.Constants;
 
 namespace SIGTI.API.Controllers
 {
@@ -76,6 +77,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPatch("{id:guid}/start")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
         public async Task<IActionResult> Start(
             [FromRoute] Guid id,
             CancellationToken cancellationToken
@@ -89,6 +91,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPatch("{id:guid}/dispatch")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
         public async Task<IActionResult> Dispatch(
             [FromRoute] Guid id,
             [FromBody] DispatchTicketRequest request,
@@ -108,6 +111,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPatch("{id:guid}/resolve")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
         public async Task<IActionResult> Resolve(
             [FromRoute] Guid id,
             CancellationToken cancellationToken
@@ -172,6 +176,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPatch("{id:guid}/transfer")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
         public async Task<IActionResult> Transfer(
             [FromRoute] Guid id,
             [FromBody] TransferTicketRequest request,

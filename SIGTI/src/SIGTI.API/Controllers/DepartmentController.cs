@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.Departments.Commands.CreateDepartment;
 using SIGTI.Application.Features.Departments.Queries.ListActiveDepartments;
+using SIGTI.Domain.Constants;
 
 namespace SIGTI.API.Controllers
 {
@@ -19,6 +20,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> Create(
             [FromBody] CreateDepartmentRequest request,
             CancellationToken cancellationToken

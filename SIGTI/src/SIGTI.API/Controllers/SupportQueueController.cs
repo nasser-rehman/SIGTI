@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.SupportQueues.Commands.AddMember;
 using SIGTI.Application.Features.SupportQueues.Commands.CreateSupportQueue;
 using SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueues;
+using SIGTI.Domain.Constants;
 
 namespace SIGTI.API.Controllers
 {
@@ -20,6 +21,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> Create(
             [FromBody] CreateSupportQueueRequest request,
             CancellationToken cancellationToken
@@ -40,6 +42,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpPost("{id:guid}/members")]
+        [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> AddMemberToSupportQueue(
             [FromRoute] Guid id,
             [FromBody] AddMemberRequest request,

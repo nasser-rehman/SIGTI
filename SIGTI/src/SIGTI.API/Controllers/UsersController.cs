@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.Users.Queries.ListUsers;
+using SIGTI.Domain.Constants;
 using SIGTI.Domain.Enums;
 
 namespace SIGTI.API.Controllers
@@ -19,6 +20,7 @@ namespace SIGTI.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = Roles.TechnicalStaff)]
         public async Task<IActionResult> List(
             [FromQuery] Role? role,
             CancellationToken cancellationToken
