@@ -263,7 +263,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Autenticação via credenciais seguras com hash BCrypt (`LoginCommand`);
 - [x] Geração de token JWT com tempo de expiração e claims de usuário/papel;
 - [x] Extração de contexto e identidade via `ICurrentUserService`;
-- [x] Configuração de Swagger/OpenAPI com autenticação Bearer.
+- [x] Configuração de Swagger/OpenAPI com autenticação Bearer;
+- [x] Proteção de endpoints contra acesso anônimo com `[Authorize]`;
+- [x] Mitigação de vulnerabilidades de impersonation com extração segura de `UserId` a partir de claims JWT.
 
 ### Infraestrutura
 - [x] Entity Framework Core & PostgreSQL (Npgsql);
@@ -373,10 +375,11 @@ Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais pa
 - [x] Testes de Integração (Repositórios e Infraestrutura);
 - [x] Adicionar comentários ao chamado (`AddCommentCommand`);
 - [x] Transferir ticket entre filas/departamentos (`TransferTicketCommand`);
+- [x] Autenticação e Autorização (JWT com proteção `[Authorize]` e mitigação de impersonation);
+- [x] Gestão de Filas de Suporte, Departamentos e Usuários;
+- [ ] Autorização Baseada em Papéis (RBAC - Administrator vs Technician vs User);
 - [ ] Histórico/Auditoria completa do ticket;
-- [ ] Autenticação e Autorização (JWT);
-- [ ] Gestão completa de Usuários, Departamentos e Filas;
-- [ ] Testes End-to-End (E2E) na API.
+- [ ] Testes End-to-End (E2E / WebApplicationFactory) na API.
 
 ---
 
