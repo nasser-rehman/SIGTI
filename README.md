@@ -96,7 +96,8 @@ Queries (Leitura)
 ├── Tickets
 │   ├── GetTicketByIdQuery
 │   ├── ListTicketsQuery
-│   └── ListTicketCommentsQuery
+│   ├── ListTicketCommentsQuery
+│   └── GetTicketTimelineQuery
 ├── SupportQueues
 │   └── ListActiveSupportQueuesQuery
 ├── Departments
@@ -275,9 +276,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (178 testes aprovados)
+### Testes Automatizados (183 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (83 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (88 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
 
@@ -379,7 +380,7 @@ Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais pa
 - [x] Autenticação e Autorização (JWT com proteção `[Authorize]` e mitigação de impersonation);
 - [x] Gestão de Filas de Suporte, Departamentos e Usuários;
 - [x] Controle de Acesso Baseado em Papéis (RBAC);
-- [ ] Histórico e Linha do Tempo do ticket;
+- [x] Histórico e Linha do Tempo do ticket;
 - [ ] Testes End-to-End (E2E / WebApplicationFactory) na API.
 
 ---
