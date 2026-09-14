@@ -1,6 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGTI.Application.Common.Exceptions;
+using SIGTI.Application.Common.Interfaces.Services;
 using SIGTI.Application.Features.Tickets.Commands.AddComment;
 using SIGTI.Application.Features.Tickets.Commands.CloseTicket;
 using SIGTI.Application.Features.Tickets.Commands.CreateTicket;
@@ -15,22 +16,40 @@ using SIGTI.Application.Features.Tickets.Queries.ListTickets;
 namespace SIGTI.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class TicketsController : ControllerBase
     {
         private readonly ISender _sender;
+        private readonly ICurrentUserService _currentUserService;
 
-        public TicketsController(ISender sender)
+        public TicketsController(
+            ISender sender,
+            ICurrentUserService currentUserService
+        )
         {
             _sender = sender;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(
-            [FromBody] CreateTicketCommand command
+            [FromBody] CreateTicketRequest request,
+            CancellationToken cancellationToken
         )
         {
-            var result = await _sender.Send(command);
+            var command = new CreateTicketCommand(
+                request.Title,
+                request.Description,
+                request.Priority,
+                request.Category,
+                request.DepartmentId,
+                request.QueueId,
+                _currentUserService.UserId!.Value
+            );
+
+            var result = await _sender.Send(command, cancellationToken);
+
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = result.Id },
@@ -79,7 +98,7 @@ namespace SIGTI.API.Controllers
             var command = new DispatchTicketCommand(
                 id,
                 request.TechnicianId,
-                request.AssignedById,
+                _currentUserService.UserId!.Value,
                 request.Reason
             );
 
@@ -125,7 +144,7 @@ namespace SIGTI.API.Controllers
         {
             var command = new AddCommentCommand(
                 id,
-                request.AuthorId,
+                _currentUserService.UserId!.Value,
                 request.Content
             );
 
@@ -163,7 +182,7 @@ namespace SIGTI.API.Controllers
                 id,
                 request.TargetQueueId,
                 request.TargetTechnicianId,
-                request.TransferredById,
+                _currentUserService.UserId!.Value,
                 request.Reason
             );
 

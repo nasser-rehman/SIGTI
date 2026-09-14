@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.Departments.Commands.CreateDepartment;
 using SIGTI.Application.Features.Departments.Queries.ListActiveDepartments;
@@ -6,6 +7,7 @@ using SIGTI.Application.Features.Departments.Queries.ListActiveDepartments;
 namespace SIGTI.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/departments")]
     public class DepartmentController : ControllerBase
     {

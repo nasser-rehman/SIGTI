@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.Users.Queries.ListUsers;
 using SIGTI.Domain.Enums;
@@ -6,6 +7,7 @@ using SIGTI.Domain.Enums;
 namespace SIGTI.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/users")]
     public class UsersController : ControllerBase
     {

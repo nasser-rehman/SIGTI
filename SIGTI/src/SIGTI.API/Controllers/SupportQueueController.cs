@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.SupportQueues.Commands.AddMember;
 using SIGTI.Application.Features.SupportQueues.Commands.CreateSupportQueue;
@@ -7,6 +8,7 @@ using SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueues;
 namespace SIGTI.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/support-queues")]
     public class SupportQueueController : ControllerBase
     {
