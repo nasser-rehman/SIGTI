@@ -265,7 +265,8 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Extração de contexto e identidade via `ICurrentUserService`;
 - [x] Configuração de Swagger/OpenAPI com autenticação Bearer;
 - [x] Proteção de endpoints contra acesso anônimo com `[Authorize]`;
-- [x] Mitigação de vulnerabilidades de impersonation com extração segura de `UserId` a partir de claims JWT.
+- [x] Mitigação de vulnerabilidades de impersonation com extração segura de `UserId` a partir de claims JWT;
+- [x] Controle de Acesso Baseado em Papéis (RBAC com constantes fortemente tipadas em `Roles.cs`).
 
 ### Infraestrutura
 - [x] Entity Framework Core & PostgreSQL (Npgsql);
@@ -377,8 +378,8 @@ Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais pa
 - [x] Transferir ticket entre filas/departamentos (`TransferTicketCommand`);
 - [x] Autenticação e Autorização (JWT com proteção `[Authorize]` e mitigação de impersonation);
 - [x] Gestão de Filas de Suporte, Departamentos e Usuários;
-- [ ] Autorização Baseada em Papéis (RBAC - Administrator vs Technician vs User);
-- [ ] Histórico/Auditoria completa do ticket;
+- [x] Controle de Acesso Baseado em Papéis (RBAC);
+- [ ] Histórico e Linha do Tempo do ticket;
 - [ ] Testes End-to-End (E2E / WebApplicationFactory) na API.
 
 ---
