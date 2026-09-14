@@ -10,6 +10,7 @@ using SIGTI.Application.Features.Tickets.Commands.ResolveTicket;
 using SIGTI.Application.Features.Tickets.Commands.StartTicketService;
 using SIGTI.Application.Features.Tickets.Commands.TransferTicket;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
+using SIGTI.Application.Features.Tickets.Queries.GetTicketTimeline;
 using SIGTI.Application.Features.Tickets.Queries.ListTicketComments;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
 using SIGTI.Domain.Constants;
@@ -169,6 +170,20 @@ namespace SIGTI.API.Controllers
         {
             var response = await _sender.Send(
                 new ListTicketCommentsQuery(id),
+                cancellationToken
+            );
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id:guid}/timeline")]
+        public async Task<IActionResult> GetTimeline(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new GetTicketTimelineQuery(id),
                 cancellationToken
             );
 
