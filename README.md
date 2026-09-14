@@ -99,8 +99,10 @@ Queries (Leitura)
 │   └── ListTicketCommentsQuery
 ├── SupportQueues
 │   └── ListActiveSupportQueuesQuery
-└── Departments
-    └── ListActiveDepartmentsQuery
+├── Departments
+│   └── ListActiveDepartmentsQuery
+└── Users
+    └── ListUsersQuery
 ```
 
 A camada também contém:
@@ -210,6 +212,10 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 - `POST /api/departments` - Criação de departamento com garantia de unicidade de nome
 - `GET /api/departments` - Listagem de departamentos ativos
+
+#### Usuários
+
+- `GET /api/users` - Listagem de usuários com suporte a filtro opcional por papel (`?role=Technician`)
 ---
 
 ## Funcionalidades implementadas
@@ -248,6 +254,11 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Listagem de departamentos ativos (`ListActiveDepartmentsQuery`);
 - [x] Endpoints HTTP dedicados (`DepartmentController`);
 
+### Usuários (Users)
+- [x] Consulta de usuários com filtragem opcional por papel (`ListUsersQuery`);
+- [x] Ocultação de dados sensíveis e hash de senhas no retorno (`ListUsersResponse`);
+- [x] Endpoint HTTP dedicado com suporte a query params (`UsersController`);
+
 ### Autenticação e Segurança (Auth)
 - [x] Autenticação via credenciais seguras com hash BCrypt (`LoginCommand`);
 - [x] Geração de token JWT com tempo de expiração e claims de usuário/papel;
@@ -261,9 +272,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (176 testes aprovados)
+### Testes Automatizados (178 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (81 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (83 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
 
