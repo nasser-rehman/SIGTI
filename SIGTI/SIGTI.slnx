@@ -6,6 +6,7 @@
     <Project Path="src/SIGTI.Infrastructure/SIGTI.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/SIGTI.API.Tests/SIGTI.API.Tests.csproj" />
     <Project Path="tests/SIGTI.Application.Tests/SIGTI.Application.Tests.csproj" />
     <Project Path="tests/SIGTI.Domain.Tests/SIGTI.Domain.Tests.csproj" />
     <Project Path="tests/SIGTI.Infrastructure.Tests/SIGTI.Infrastructure.Tests.csproj" />
