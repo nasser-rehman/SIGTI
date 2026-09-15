@@ -217,6 +217,7 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 #### Usuários
 
+- `POST /api/users` - Provisionamento de novos usuários com senha segura (BCrypt) e validação de e-mail único (Restrito a `Administrator`)
 - `GET /api/users` - Listagem de usuários com suporte a filtro opcional por papel (`?role=Technician`)
 ---
 
@@ -257,9 +258,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Endpoints HTTP dedicados (`DepartmentController`);
 
 ### Usuários (Users)
+- [x] Provisionamento de novos usuários (`CreateUserCommand`);
+- [x] Garantia de unicidade de e-mail no domínio;
+- [x] Hash seguro de senhas com BCrypt (`IPasswordHasher`);
 - [x] Consulta de usuários com filtragem opcional por papel (`ListUsersQuery`);
-- [x] Ocultação de dados sensíveis e hash de senhas no retorno (`ListUsersResponse`);
-- [x] Endpoint HTTP dedicado com suporte a query params (`UsersController`);
+- [x] Ocultação de dados sensíveis e hash de senhas no retorno (`ListUsersResponse`, `CreateUserResponse`);
+- [x] Endpoints HTTP dedicados com controle de acesso RBAC (`UsersController`);
 
 ### Autenticação e Segurança (Auth)
 - [x] Autenticação via credenciais seguras com hash BCrypt (`LoginCommand`);
