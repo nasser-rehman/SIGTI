@@ -385,7 +385,7 @@ Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais pa
 - [x] Controle de Acesso Baseado em Papéis (RBAC);
 - [x] Histórico e Linha do Tempo do ticket (`GetTicketTimelineQuery`);
 - [x] Testes End-to-End (E2E / WebApplicationFactory) na API (Autenticação e RBAC);
-- [ ] Testes E2E de Fluxo de Ciclo de Vida do Chamado (Criação, Comentários e Timeline via HTTP).
+- [x] Testes E2E de Fluxo de Ciclo de Vida do Chamado (Criação, Atendimento, Comentários, Resolução, Fechamento e Timeline via HTTP).
 
 ---
 
