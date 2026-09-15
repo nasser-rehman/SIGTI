@@ -7,8 +7,8 @@ using SIGTI.Domain.Enums;
 
 namespace SIGTI.API.Tests.Controllers
 {
-    public class AuthenticationAndAuthorizationTests
-        : IClassFixture<CustomWebApplicationFactory>
+    [Collection("ApiTestCollection")]
+    public class AuthenticationAndAuthorizationTests : IAsyncLifetime
     {
         private readonly CustomWebApplicationFactory _factory;
 
@@ -18,6 +18,13 @@ namespace SIGTI.API.Tests.Controllers
         {
             _factory = factory;
         }
+
+        public async Task InitializeAsync()
+        {
+            await _factory.ResetDatabaseAsync();
+        }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         [Theory]
         [InlineData("/api/tickets")]
