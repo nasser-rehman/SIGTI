@@ -39,6 +39,7 @@ SIGTI
 │   └── SIGTI.Infrastructure
 │
 └── tests
+    ├── SIGTI.API.Tests
     ├── SIGTI.Application.Tests
     ├── SIGTI.Domain.Tests
     └── SIGTI.Infrastructure.Tests
@@ -276,11 +277,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (183 testes aprovados)
+### Testes Automatizados (191 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
 - [x] Testes de Aplicação (88 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
+- [x] Testes de Integração de API / E2E (8 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT e controle de acesso RBAC (`401 Unauthorized` e `403 Forbidden`).
 
 ---
 
@@ -304,7 +306,8 @@ Os testes estão separados por responsabilidade e nível de isolamento:
 tests
 ├── SIGTI.Domain.Tests           # Regras puras de negócio e invariantes, sem I/O.
 ├── SIGTI.Application.Tests      # Casos de uso com mocks de dependências (Moq).
-└── SIGTI.Infrastructure.Tests   # Testes de integração reais contra PostgreSQL.
+├── SIGTI.Infrastructure.Tests   # Testes de integração reais contra PostgreSQL.
+└── SIGTI.API.Tests              # Testes E2E ponta a ponta com WebApplicationFactory.
 ```
 
 Os testes de integração utilizam a biblioteca **Respawn** para isolar cada cenário, truncando os dados de forma determinística e garantindo validações precisas de Migrations, ordenações (ex: por severidade de prioridade) e relacionamentos complexos (`Include`).
@@ -380,8 +383,9 @@ Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais pa
 - [x] Autenticação e Autorização (JWT com proteção `[Authorize]` e mitigação de impersonation);
 - [x] Gestão de Filas de Suporte, Departamentos e Usuários;
 - [x] Controle de Acesso Baseado em Papéis (RBAC);
-- [x] Histórico e Linha do Tempo do ticket;
-- [ ] Testes End-to-End (E2E / WebApplicationFactory) na API.
+- [x] Histórico e Linha do Tempo do ticket (`GetTicketTimelineQuery`);
+- [x] Testes End-to-End (E2E / WebApplicationFactory) na API (Autenticação e RBAC);
+- [ ] Testes E2E de Fluxo de Ciclo de Vida do Chamado (Criação, Comentários e Timeline via HTTP).
 
 ---
 
