@@ -90,6 +90,8 @@ Commands (Escrita)
     │   └── AddMemberCommand
     ├── Departments
     │   └── CreateDepartmentCommand
+    ├── Users
+    │   └── CreateUserCommand
     └── Auth
         └── LoginCommand
 
@@ -281,12 +283,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (191 testes aprovados)
+### Testes Automatizados (208 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (88 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (104 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
-- [x] Testes de Integração de API / E2E (8 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT e controle de acesso RBAC (`401 Unauthorized` e `403 Forbidden`).
+- [x] Testes de Integração de API / E2E (9 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC e ciclo de vida completo do chamado.
 
 ---
 
