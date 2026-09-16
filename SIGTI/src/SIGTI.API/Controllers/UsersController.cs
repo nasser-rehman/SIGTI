@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Features.Users.Commands.CreateUser;
+using SIGTI.Application.Features.Users.Commands.DeactivateUser;
+using SIGTI.Application.Features.Users.Queries.GetUserById;
 using SIGTI.Application.Features.Users.Queries.ListUsers;
 using SIGTI.Domain.Constants;
 using SIGTI.Domain.Enums;
@@ -33,6 +35,21 @@ namespace SIGTI.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{id:guid}")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
+        public async Task<IActionResult> GetById(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new GetUserByIdQuery(id),
+                cancellationToken
+            );
+
+            return Ok(response);
+        }
+
         [HttpPost]
         [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> Create(
@@ -50,7 +67,26 @@ namespace SIGTI.API.Controllers
 
             var result = await _sender.Send(command, cancellationToken);
 
-            return StatusCode(StatusCodes.Status201Created, result);
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = result.Id },
+                result
+            );
+        }
+
+        [HttpPatch("{id:guid}/deactivate")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> Deactivate(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new DeactivateUserCommand(id),
+                cancellationToken
+            );
+
+            return Ok(response);
         }
     }
 }

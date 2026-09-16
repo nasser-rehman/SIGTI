@@ -91,7 +91,8 @@ Commands (Escrita)
     ├── Departments
     │   └── CreateDepartmentCommand
     ├── Users
-    │   └── CreateUserCommand
+    │   ├── CreateUserCommand
+    │   └── DeactivateUserCommand
     └── Auth
         └── LoginCommand
 
@@ -106,7 +107,8 @@ Queries (Leitura)
 ├── Departments
 │   └── ListActiveDepartmentsQuery
 └── Users
-    └── ListUsersQuery
+    ├── ListUsersQuery
+    └── GetUserByIdQuery
 ```
 
 A camada também contém:
@@ -220,7 +222,10 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 #### Usuários
 
 - `POST /api/users` - Provisionamento de novos usuários com senha segura (BCrypt) e validação de e-mail único (Restrito a `Administrator`)
-- `GET /api/users` - Listagem de usuários com suporte a filtro opcional por papel (`?role=Technician`)
+- `GET /api/users/{id}` - Obtenção detalhada do perfil de usuário por identificador (Restrito a `TechnicalStaff`)
+- `GET /api/users` - Listagem de usuários com suporte a filtro opcional por papel (`?role=Technician`) (Restrito a `TechnicalStaff`)
+- `PATCH /api/users/{id}/deactivate` - Desativação lógica de usuário com proteção contra auto-desativação e usuários de sistema (Restrito a `Administrator`)
+
 ---
 
 ## Funcionalidades implementadas
@@ -261,11 +266,14 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 ### Usuários (Users)
 - [x] Provisionamento de novos usuários (`CreateUserCommand`);
+- [x] Desativação lógica de usuários com proteções de segurança (`DeactivateUserCommand`);
 - [x] Garantia de unicidade de e-mail no domínio;
 - [x] Hash seguro de senhas com BCrypt (`IPasswordHasher`);
+- [x] Consulta detalhada de usuário por ID (`GetUserByIdQuery`);
 - [x] Consulta de usuários com filtragem opcional por papel (`ListUsersQuery`);
-- [x] Ocultação de dados sensíveis e hash de senhas no retorno (`ListUsersResponse`, `CreateUserResponse`);
+- [x] Ocultação de dados sensíveis e hash de senhas no retorno (`ListUsersResponse`, `CreateUserResponse`, `GetUserByIdResponse`);
 - [x] Endpoints HTTP dedicados com controle de acesso RBAC (`UsersController`);
+- [x] Testes de integração ponta a ponta (E2E) para o ciclo de vida do usuário (`UserManagementE2ETests`).
 
 ### Autenticação e Segurança (Auth)
 - [x] Autenticação via credenciais seguras com hash BCrypt (`LoginCommand`);
@@ -283,12 +291,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (208 testes aprovados)
+### Testes Automatizados (223 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (104 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (115 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
-- [x] Testes de Integração de API / E2E (9 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC e ciclo de vida completo do chamado.
+- [x] Testes de Integração de API / E2E (13 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e ciclo de vida completo do chamado.
 
 ---
 
