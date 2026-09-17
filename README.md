@@ -89,7 +89,8 @@ Commands (Escrita)
     │   ├── CreateSupportQueueCommand
     │   └── AddMemberCommand
     ├── Departments
-    │   └── CreateDepartmentCommand
+    │   ├── CreateDepartmentCommand
+    │   └── UpdateDepartmentCommand
     ├── Users
     │   ├── CreateUserCommand
     │   └── DeactivateUserCommand
@@ -105,7 +106,8 @@ Queries (Leitura)
 ├── SupportQueues
 │   └── ListActiveSupportQueuesQuery
 ├── Departments
-│   └── ListActiveDepartmentsQuery
+│   ├── ListActiveDepartmentsQuery
+│   └── GetDepartmentByIdQuery
 └── Users
     ├── ListUsersQuery
     └── GetUserByIdQuery
@@ -261,6 +263,8 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 ### Departamentos (Departments)
 - [x] Criação de departamentos com garantia de unicidade de nome (`CreateDepartmentCommand`);
+- [x] Atualização de dados cadastrais com validação de duplicidade de nome (`UpdateDepartmentCommand`);
+- [x] Consulta detalhada de departamento por ID (`GetDepartmentByIdQuery`);
 - [x] Listagem de departamentos ativos (`ListActiveDepartmentsQuery`);
 - [x] Endpoints HTTP dedicados (`DepartmentController`);
 
@@ -291,9 +295,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (223 testes aprovados)
+### Testes Automatizados (241 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (115 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (133 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
 - [x] Testes de Integração de API / E2E (13 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e ciclo de vida completo do chamado.
