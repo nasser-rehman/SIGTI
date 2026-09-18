@@ -267,6 +267,7 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Consulta detalhada de departamento por ID (`GetDepartmentByIdQuery`);
 - [x] Listagem de departamentos ativos (`ListActiveDepartmentsQuery`);
 - [x] Endpoints HTTP dedicados (`DepartmentController`);
+- [x] Testes de integração ponta a ponta (E2E) para o ciclo de vida de departamentos (`DepartmentManagementE2ETests`).
 
 ### Usuários (Users)
 - [x] Provisionamento de novos usuários (`CreateUserCommand`);
@@ -295,12 +296,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (241 testes aprovados)
+### Testes Automatizados (246 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
 - [x] Testes de Aplicação (133 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
-- [x] Testes de Integração de API / E2E (13 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e ciclo de vida completo do chamado.
+- [x] Testes de Integração de API / E2E (18 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e departamentos, e ciclo de vida completo do chamado.
 
 ---
 
