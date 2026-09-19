@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGTI.Application.Features.Departments.Commands.ActivateDepartment;
 using SIGTI.Application.Features.Departments.Commands.CreateDepartment;
+using SIGTI.Application.Features.Departments.Commands.DeactivateDepartment;
 using SIGTI.Application.Features.Departments.Commands.UpdateDepartment;
 using SIGTI.Application.Features.Departments.Queries.GetDepartmentById;
 using SIGTI.Application.Features.Departments.Queries.ListActiveDepartments;
@@ -84,6 +86,36 @@ namespace SIGTI.API.Controllers
             );
 
             var response = await _sender.Send(command, cancellationToken);
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/deactivate")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> Deactivate(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new DeactivateDepartmentCommand(id),
+                cancellationToken
+            );
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/activate")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> Activate(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new ActivateDepartmentCommand(id),
+                cancellationToken
+            );
 
             return Ok(response);
         }

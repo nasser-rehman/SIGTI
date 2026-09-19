@@ -6,7 +6,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using SIGTI.API.Tests.Fixtures;
+using SIGTI.Application.Features.Departments.Commands.ActivateDepartment;
 using SIGTI.Application.Features.Departments.Commands.CreateDepartment;
+using SIGTI.Application.Features.Departments.Commands.DeactivateDepartment;
 using SIGTI.Application.Features.Departments.Commands.UpdateDepartment;
 using SIGTI.Application.Features.Departments.Queries.GetDepartmentById;
 using SIGTI.Domain.Enums;
@@ -232,6 +234,127 @@ namespace SIGTI.API.Tests.Controllers
 
             // Assert: Should return StatusCode 400 Bad Request
             updateResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task DeactivateDepartment_WhenCalledByAdmin_ShouldDeactivateAndReturnOk()
+        {
+            // Arrange
+            var targetDepartment = await _factory.ExecuteDbContextAsync(
+                async context =>
+                {
+                    var dept = new DepartmentBuilder()
+                        .WithName("Cool Department")
+                        .WithDescription("The coolest department ever.")
+                        .Build();
+                    await context.Departments.AddAsync(dept);
+                    await context.SaveChangesAsync();
+
+                    return dept;
+                }
+            );
+
+            var adminClient = _factory.CreateClientWithRole(Role.Administrator);
+
+            var request = new DeactivateDepartmentCommand(targetDepartment.Id);
+
+            // Act
+            var deactivateResponse = await adminClient.PatchAsJsonAsync(
+                $"/api/departments/{targetDepartment.Id}/deactivate",
+                request
+            );
+
+            // Assert
+            deactivateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            var retrievedDepartment =
+                await deactivateResponse.Content.ReadFromJsonAsync<DeactivateDepartmentResponse>(
+                    JsonOptions
+                );
+            retrievedDepartment?.Id.Should().Be(targetDepartment.Id);
+            retrievedDepartment?.IsActive.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task DeactivateDepartment_WhenCalledByNonAdmin_ShouldReturnForbidden()
+        {
+            // Arrange
+            var department = await _factory.ExecuteDbContextAsync(async ctx =>
+                await ctx.Departments.FirstAsync()
+            );
+
+            var userClient = _factory.CreateClientWithRole(Role.User);
+
+            var request = new DeactivateDepartmentCommand(department.Id);
+
+            // Act
+            var response = await userClient.PatchAsJsonAsync(
+                $"/api/departments/{department.Id}/deactivate",
+                request
+            );
+
+            // Assert: RBAC should block with 403 Forbidden
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task ActivateDepartment_WhenCalledByAdmin_ShouldActivateAndReturnOk()
+        {
+            // Arrange
+            var targetDepartment = await _factory.ExecuteDbContextAsync(
+                async context =>
+                {
+                    var dept = new DepartmentBuilder()
+                        .WithName("Cool Department")
+                        .WithDescription("The coolest department ever.")
+                        .AsDeactivated()
+                        .Build();
+                    await context.Departments.AddAsync(dept);
+                    await context.SaveChangesAsync();
+
+                    return dept;
+                }
+            );
+
+            var adminClient = _factory.CreateClientWithRole(Role.Administrator);
+
+            var request = new ActivateDepartmentCommand(targetDepartment.Id);
+
+            // Act
+            var activateResponse = await adminClient.PatchAsJsonAsync(
+                $"/api/departments/{targetDepartment.Id}/activate",
+                request
+            );
+
+            // Assert
+            activateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            var retrievedDepartment =
+                await activateResponse.Content.ReadFromJsonAsync<ActivateDepartmentResponse>(
+                    JsonOptions
+                );
+            retrievedDepartment?.Id.Should().Be(targetDepartment.Id);
+            retrievedDepartment?.IsActive.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task ActivateDepartment_WhenCalledByNonAdmin_ShouldReturnForbidden()
+        {
+            // Arrange
+            var department = await _factory.ExecuteDbContextAsync(async ctx =>
+                await ctx.Departments.FirstAsync()
+            );
+
+            var userClient = _factory.CreateClientWithRole(Role.User);
+
+            var request = new ActivateDepartmentCommand(department.Id);
+
+            // Act
+            var response = await userClient.PatchAsJsonAsync(
+                $"/api/departments/{department.Id}/activate",
+                request
+            );
+
+            // Assert: RBAC should block with 403 Forbidden
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
     }
 }
