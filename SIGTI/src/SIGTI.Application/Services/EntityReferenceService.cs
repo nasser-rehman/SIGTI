@@ -28,12 +28,18 @@ namespace SIGTI.Application.Common.Services
             _ticketRepository = ticketRepository;
         }
 
-        public async Task<User> GetRequiredUserAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<User> GetRequiredUserAsync(
+            Guid id,
+            CancellationToken cancellationToken
+        )
         {
-            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            var user = await _userRepository.GetByIdAsync(
+                id,
+                cancellationToken
+            );
 
             if (user is null)
-                throw new NotFoundException($"Usuãrio'{id}' não encontrado.");
+                throw new NotFoundException($"Usuário'{id}' não encontrado.");
             return user;
         }
 
@@ -42,10 +48,15 @@ namespace SIGTI.Application.Common.Services
             CancellationToken cancellationToken
         )
         {
-            var department = await _departmentRepository.GetByIdAsync(id, cancellationToken);
+            var department = await _departmentRepository.GetByIdAsync(
+                id,
+                cancellationToken
+            );
 
             if (department is null)
-                throw new NotFoundException($"Departamento com '{id}' não encontrado.");
+                throw new NotFoundException(
+                    $"Departamento com '{id}' não encontrado."
+                );
 
             return department;
         }
@@ -55,10 +66,15 @@ namespace SIGTI.Application.Common.Services
             CancellationToken cancellationToken
         )
         {
-            var queue = await _supportQueueRepository.GetByIdAsync(id, cancellationToken);
+            var queue = await _supportQueueRepository.GetByIdAsync(
+                id,
+                cancellationToken
+            );
 
             if (queue is null)
-                throw new NotFoundException($"Fila de suporte com ${id} não encontrado.");
+                throw new NotFoundException(
+                    $"Fila de suporte com ${id} não encontrado."
+                );
             return queue;
         }
 
@@ -67,19 +83,30 @@ namespace SIGTI.Application.Common.Services
             CancellationToken cancellationToken
         )
         {
-            var ticket = await _ticketRepository.GetByIdAsync(id, cancellationToken);
+            var ticket = await _ticketRepository.GetByIdAsync(
+                id,
+                cancellationToken
+            );
 
             if (ticket is null)
-                throw new NotFoundException($"Ticket com ID: ${id} não encontrado.");
+                throw new NotFoundException(
+                    $"Ticket com ID: ${id} não encontrado."
+                );
             return ticket;
         }
 
-        public async Task<User> GetRequiredSystemUserAsync(CancellationToken cancellationToken)
+        public async Task<User> GetRequiredSystemUserAsync(
+            CancellationToken cancellationToken
+        )
         {
-            var user = await _userRepository.GetSystemUserAsync(cancellationToken);
+            var user = await _userRepository.GetSystemUserAsync(
+                cancellationToken
+            );
 
             if (user is null)
-                throw new NotFoundException("Usuário do sistema não encontrado.");
+                throw new NotFoundException(
+                    "Usuário do sistema não encontrado."
+                );
 
             return user;
         }

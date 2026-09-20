@@ -95,7 +95,9 @@ Commands (Escrita)
     │   └── ActivateDepartmentCommand
     ├── Users
     │   ├── CreateUserCommand
-    │   └── DeactivateUserCommand
+    │   ├── UpdateUserCommand
+    │   ├── DeactivateUserCommand
+    │   └── ActivateUserCommand
     └── Auth
         └── LoginCommand
 
@@ -279,12 +281,14 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 ### Usuários (Users)
 - [x] Provisionamento de novos usuários (`CreateUserCommand`);
+- [x] Atualização de dados cadastrais de usuários (`UpdateUserCommand`);
 - [x] Desativação lógica de usuários com proteções de segurança (`DeactivateUserCommand`);
+- [x] Reativação lógica de usuários (`ActivateUserCommand`);
 - [x] Garantia de unicidade de e-mail no domínio;
 - [x] Hash seguro de senhas com BCrypt (`IPasswordHasher`);
 - [x] Consulta detalhada de usuário por ID (`GetUserByIdQuery`);
 - [x] Consulta de usuários com filtragem opcional por papel (`ListUsersQuery`);
-- [x] Ocultação de dados sensíveis e hash de senhas no retorno (`ListUsersResponse`, `CreateUserResponse`, `GetUserByIdResponse`);
+- [x] Ocultação de dados sensíveis e hash de senhas no retorno (`ListUsersResponse`, `CreateUserResponse`, `GetUserByIdResponse`, `UpdateUserResponse`);
 - [x] Endpoints HTTP dedicados com controle de acesso RBAC (`UsersController`);
 - [x] Testes de integração ponta a ponta (E2E) para o ciclo de vida do usuário (`UserManagementE2ETests`).
 
@@ -304,12 +308,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (260 testes aprovados)
+### Testes Automatizados (280 testes aprovados)
 - [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (143 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (159 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
-- [x] Testes de Integração de API / E2E (22 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e ciclo de vida completo do chamado e departamentos.
+- [x] Testes de Integração de API / E2E (26 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e departamentos, e ciclo de vida completo do chamado.
 
 ---
 

@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGTI.Application.Features.Users.Commands.ActivateUser;
 using SIGTI.Application.Features.Users.Commands.CreateUser;
 using SIGTI.Application.Features.Users.Commands.DeactivateUser;
+using SIGTI.Application.Features.Users.Commands.UpdateUser;
 using SIGTI.Application.Features.Users.Queries.GetUserById;
 using SIGTI.Application.Features.Users.Queries.ListUsers;
 using SIGTI.Domain.Constants;
@@ -85,6 +87,41 @@ namespace SIGTI.API.Controllers
                 new DeactivateUserCommand(id),
                 cancellationToken
             );
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/activate")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> Activate(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new ActivateUserCommand(id),
+                cancellationToken
+            );
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:guid}")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> Update(
+            [FromRoute] Guid id,
+            [FromBody] UpdateUserRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new UpdateUserCommand(
+                id,
+                request.Name,
+                request.Role,
+                request.DepartmentId
+            );
+
+            var response = await _sender.Send(command, cancellationToken);
 
             return Ok(response);
         }
