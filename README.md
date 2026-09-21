@@ -87,6 +87,9 @@ Commands (Escrita)
     │   └── CloseTicketCommand
     ├── SupportQueues
     │   ├── CreateSupportQueueCommand
+    │   ├── UpdateSupportQueueCommand
+    │   ├── DeactivateSupportQueueCommand
+    │   ├── ActivateSupportQueueCommand
     │   └── AddMemberCommand
     ├── Departments
     │   ├── CreateDepartmentCommand
@@ -108,7 +111,8 @@ Queries (Leitura)
 │   ├── ListTicketCommentsQuery
 │   └── GetTicketTimelineQuery
 ├── SupportQueues
-│   └── ListActiveSupportQueuesQuery
+│   ├── ListActiveSupportQueuesQuery
+│   └── GetSupportQueueByIdQuery
 ├── Departments
 │   ├── ListActiveDepartmentsQuery
 │   └── GetDepartmentByIdQuery
@@ -262,10 +266,15 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 ### Filas de Suporte (Support Queues)
 - [x] Criação de filas de suporte com unicidade de nome (`CreateSupportQueueCommand`);
+- [x] Atualização de dados cadastrais com validação condicional de unicidade de nome (`UpdateSupportQueueCommand`);
+- [x] Desativação lógica de filas de suporte com proteção contra transição redundante (`DeactivateSupportQueueCommand`);
+- [x] Reativação lógica de filas de suporte (`ActivateSupportQueueCommand`);
 - [x] Associação de técnicos a filas de atendimento (`AddMemberCommand`);
 - [x] Controle de capacidade simultânea por técnico (`MaxConcurrentTickets`);
+- [x] Atualização da capacidade de técnico no domínio via Aggregate Root (`queue.UpdateMemberCapacity(...)`);
 - [x] Prevenção de duplicidade e reativação de membros inativos na fila;
 - [x] Validação de papel de técnico no domínio (`technician.IsTechnician()`);
+- [x] Consulta detalhada de fila por ID com membros e capacidades (`GetSupportQueueByIdQuery`);
 - [x] Listagem de filas ativas (`ListActiveSupportQueuesQuery`);
 - [x] Endpoints HTTP dedicados para gestão de filas e membros (`SupportQueueController`);
 
@@ -308,9 +317,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (280 testes aprovados)
-- [x] Testes de Domínio (72 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (159 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+### Testes Automatizados (334 testes aprovados)
+- [x] Testes de Domínio (100 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
+- [x] Testes de Aplicação (185 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
 - [x] Testes de Integração de API / E2E (26 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e departamentos, e ciclo de vida completo do chamado.
