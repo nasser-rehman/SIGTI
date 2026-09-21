@@ -27,7 +27,9 @@ namespace SIGTI.Domain.Entities
         public void UpdateName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new DomainException("O nome da fila de suporte é obrigatório.");
+                throw new DomainException(
+                    "O nome da fila de suporte é obrigatório."
+                );
 
             name = name.Trim();
 
@@ -43,7 +45,9 @@ namespace SIGTI.Domain.Entities
         public void UpdateDescription(string description)
         {
             if (string.IsNullOrWhiteSpace(description))
-                throw new DomainException("A descrição da fila de suporte é obrigatória.");
+                throw new DomainException(
+                    "A descrição da fila de suporte é obrigatória."
+                );
 
             description = description.Trim();
             if (description.Length > MaxDescriptionLength)
@@ -83,19 +87,25 @@ namespace SIGTI.Domain.Entities
                     "O usuário deve ser um técnico para ser adicionado à fila."
                 );
 
-            var member = _members.FirstOrDefault(x => x.TechnicianId == technician.Id);
+            var member = _members.FirstOrDefault(x =>
+                x.TechnicianId == technician.Id
+            );
 
             if (member is not null)
             {
                 if (member.IsActive)
-                    throw new DomainException("O técnico já é membro ativo da fila.");
+                    throw new DomainException(
+                        "O técnico já é membro ativo da fila."
+                    );
 
                 member.Activate(maxConcurrentTickets);
                 UpdateTimestamp();
                 return;
             }
 
-            _members.Add(new SupportQueueMember(this, technician, maxConcurrentTickets));
+            _members.Add(
+                new SupportQueueMember(this, technician, maxConcurrentTickets)
+            );
 
             UpdateTimestamp();
         }
@@ -118,6 +128,28 @@ namespace SIGTI.Domain.Entities
                 throw new DomainException("O técnico não é membro da fila.");
 
             member.Deactivate();
+
+            UpdateTimestamp();
+        }
+
+        public void UpdateMemberCapacity(
+            User technician,
+            int maxConcurrentTickets
+        )
+        {
+            if (technician is null)
+                throw new DomainException("O técnico é obrigatório.");
+
+            var member = _members.FirstOrDefault(m =>
+                m.TechnicianId == technician.Id && m.IsActive
+            );
+
+            if (member is null)
+                throw new DomainException(
+                    "O técnico não é membro ativo da fila."
+                );
+
+            member.UpdateMaxConcurrentTickets(maxConcurrentTickets);
 
             UpdateTimestamp();
         }
