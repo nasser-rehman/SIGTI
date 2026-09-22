@@ -90,7 +90,9 @@ Commands (Escrita)
     │   ├── UpdateSupportQueueCommand
     │   ├── DeactivateSupportQueueCommand
     │   ├── ActivateSupportQueueCommand
-    │   └── AddMemberCommand
+    │   ├── AddMemberCommand
+    │   ├── RemoveMemberCommand
+    │   └── UpdateMemberCapacityCommand
     ├── Departments
     │   ├── CreateDepartmentCommand
     │   ├── UpdateDepartmentCommand
@@ -270,13 +272,15 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Desativação lógica de filas de suporte com proteção contra transição redundante (`DeactivateSupportQueueCommand`);
 - [x] Reativação lógica de filas de suporte (`ActivateSupportQueueCommand`);
 - [x] Associação de técnicos a filas de atendimento (`AddMemberCommand`);
+- [x] Remoção lógica de membros técnicos da fila (`RemoveMemberCommand`);
 - [x] Controle de capacidade simultânea por técnico (`MaxConcurrentTickets`);
-- [x] Atualização da capacidade de técnico no domínio via Aggregate Root (`queue.UpdateMemberCapacity(...)`);
+- [x] Atualização da capacidade concorrente de técnico no domínio e via API (`UpdateMemberCapacityCommand`);
 - [x] Prevenção de duplicidade e reativação de membros inativos na fila;
 - [x] Validação de papel de técnico no domínio (`technician.IsTechnician()`);
 - [x] Consulta detalhada de fila por ID com membros e capacidades (`GetSupportQueueByIdQuery`);
 - [x] Listagem de filas ativas (`ListActiveSupportQueuesQuery`);
-- [x] Endpoints HTTP dedicados para gestão de filas e membros (`SupportQueueController`);
+- [x] Endpoints HTTP dedicados para gestão de filas e membros com proteção RBAC (`SupportQueueController`);
+- [x] Testes de integração ponta a ponta (E2E) para o ciclo de vida de filas e membros (`SupportQueueManagementE2ETests`).
 
 ### Departamentos (Departments)
 - [x] Criação de departamentos com garantia de unicidade de nome (`CreateDepartmentCommand`);
@@ -317,12 +321,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (334 testes aprovados)
+### Testes Automatizados (355 testes aprovados)
 - [x] Testes de Domínio (100 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (185 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (201 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
-- [x] Testes de Integração de API / E2E (26 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários e departamentos, e ciclo de vida completo do chamado.
+- [x] Testes de Integração de API / E2E (31 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários, departamentos, filas de suporte e membros, e ciclo de vida completo do chamado.
 
 ---
 
