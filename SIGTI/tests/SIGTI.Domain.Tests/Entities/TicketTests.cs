@@ -246,4 +246,129 @@ public class TicketTests
                 "O ticket deve estar em andamento ou aguardando o cliente para ser resolvido."
             );
     }
+
+    [Fact]
+    public void Should_WaitCustomer_When_Is_InProgress()
+    {
+        // Arrange
+        var ticket = new TicketBuilder().Build();
+        var technician = new UserBuilder().WithRole(Role.Technician).Build();
+        var assignedBy = new UserBuilder().WithRole(Role.Administrator).Build();
+        ticket.AssignTechnician(technician, assignedBy, "Atribuição");
+        ticket.StartService();
+
+        // Act
+        ticket.WaitCustomer();
+
+        // Assert
+        ticket.Status.Should().Be(TicketStatus.WaitingCustomer);
+        ticket.UpdatedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Should_Throw_When_WaitCustomer_Called_On_Non_InProgress_Ticket()
+    {
+        // Arrange
+        var ticket = new TicketBuilder().Build();
+
+        // Act
+        var act = () => ticket.WaitCustomer();
+
+        // Assert
+        act.Should()
+            .Throw<DomainException>()
+            .WithMessage(
+                "O ticket deve estar em andamento para aguardar o cliente."
+            );
+    }
+
+    [Fact]
+    public void Should_ResumeService_When_Ticket_Is_WaitingCustomer()
+    {
+        // Arrange
+        var ticket = new TicketBuilder().Build();
+        var technician = new UserBuilder().WithRole(Role.Technician).Build();
+        var assignedBy = new UserBuilder().WithRole(Role.Administrator).Build();
+
+        ticket.AssignTechnician(technician, assignedBy, "Atribuição");
+        ticket.StartService();
+        ticket.WaitCustomer();
+
+        // Act
+        ticket.ResumeService();
+
+        // Assert
+        ticket.Status.Should().Be(TicketStatus.InProgress);
+        ticket.UpdatedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Should_Throw_When_ResumeService_Called_On_Non_WaitingCustomer_Ticket()
+    {
+        // Arrange
+        var ticket = new TicketBuilder().Build();
+
+        // Act
+        Action act = () => ticket.ResumeService();
+
+        // Assert
+        act.Should()
+            .Throw<DomainException>()
+            .WithMessage(
+                "O ticket deve estar aguardando o cliente para retomar o atendimento."
+            );
+    }
+
+    [Fact]
+    public void Should_Reclassify_Ticket_Successfully_When_Active()
+    {
+        // Arrange
+        var ticket = new TicketBuilder().Build();
+
+        // Act
+        ticket.Reclassify(TicketPriority.Critical, TicketCategory.Software);
+
+        // Assert
+        ticket.Priority.Should().Be(TicketPriority.Critical);
+        ticket.Category.Should().Be(TicketCategory.Software);
+        ticket.UpdatedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Should_Throw_When_Reclassifying_Closed_Ticket()
+    {
+        // Arrange
+        var ticket = new TicketBuilder().BuildAsClosed();
+
+        // Act
+        Action action = () =>
+            ticket.Reclassify(TicketPriority.High, TicketCategory.Network);
+
+        // Assert
+        action
+            .Should()
+            .Throw<DomainException>()
+            .WithMessage(
+                "Não é possível reclassificar tickets resolvidos ou fechados."
+            );
+    }
+
+    [Fact]
+    public void Should_Throw_When_Reclassifying_Resolved_Ticket()
+    {
+        // Arrange
+        var ticket = new TicketBuilder().BuildAsResolved();
+
+        // Act
+        Action action = () =>
+            ticket.Reclassify(TicketPriority.High, TicketCategory.Network);
+
+        // Assert
+        action
+            .Should()
+            .Throw<DomainException>()
+            .WithMessage(
+                "Não é possível reclassificar tickets resolvidos ou fechados."
+            );
+    }
 }

@@ -158,6 +158,19 @@ namespace SIGTI.Domain.Entities
             UpdateTimestamp();
         }
 
+        public void ResumeService()
+        {
+            if (Status != TicketStatus.WaitingCustomer)
+            {
+                throw new DomainException(
+                    "O ticket deve estar aguardando o cliente para retomar o atendimento."
+                );
+            }
+
+            Status = TicketStatus.InProgress;
+            UpdateTimestamp();
+        }
+
         public void Resolve()
         {
             if (
@@ -198,6 +211,20 @@ namespace SIGTI.Domain.Entities
                 throw new DomainException("Categoria do ticket inválida.");
             Category = category;
             UpdateTimestamp();
+        }
+
+        public void Reclassify(TicketPriority priority, TicketCategory category)
+        {
+            if (
+                Status == TicketStatus.Closed
+                || Status == TicketStatus.Resolved
+            )
+                throw new DomainException(
+                    "Não é possível reclassificar tickets resolvidos ou fechados."
+                );
+
+            ChangePriority(priority);
+            ChangeCategory(category);
         }
 
         internal void ChangeDepartment(Department department)
