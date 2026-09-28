@@ -6,9 +6,12 @@ using SIGTI.Application.Features.Tickets.Commands.AddComment;
 using SIGTI.Application.Features.Tickets.Commands.CloseTicket;
 using SIGTI.Application.Features.Tickets.Commands.CreateTicket;
 using SIGTI.Application.Features.Tickets.Commands.DispatchTicket;
+using SIGTI.Application.Features.Tickets.Commands.ReclassifyTicket;
 using SIGTI.Application.Features.Tickets.Commands.ResolveTicket;
+using SIGTI.Application.Features.Tickets.Commands.ResumeTicketService;
 using SIGTI.Application.Features.Tickets.Commands.StartTicketService;
 using SIGTI.Application.Features.Tickets.Commands.TransferTicket;
+using SIGTI.Application.Features.Tickets.Commands.WaitCustomerTicket;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketTimeline;
 using SIGTI.Application.Features.Tickets.Queries.ListTicketComments;
@@ -204,6 +207,55 @@ namespace SIGTI.API.Controllers
                 request.TargetTechnicianId,
                 _currentUserService.UserId!.Value,
                 request.Reason
+            );
+
+            var response = await _sender.Send(command, cancellationToken);
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/wait-customer")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
+        public async Task<IActionResult> WaitCustomer(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new WaitCustomerTicketCommand(id),
+                cancellationToken
+            );
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/resume")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
+        public async Task<IActionResult> Resume(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new ResumeTicketServiceCommand(id),
+                cancellationToken
+            );
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/reclassify")]
+        [Authorize(Roles = Roles.TechnicalStaff)]
+        public async Task<IActionResult> Reclassify(
+            [FromRoute] Guid id,
+            [FromBody] ReclassifyTicketRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new ReclassifyTicketCommand(
+                id,
+                request.Priority,
+                request.Category
             );
 
             var response = await _sender.Send(command, cancellationToken);
