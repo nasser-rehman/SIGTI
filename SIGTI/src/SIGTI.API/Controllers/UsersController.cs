@@ -1,9 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGTI.Application.Common.Interfaces.Services;
 using SIGTI.Application.Features.Users.Commands.ActivateUser;
+using SIGTI.Application.Features.Users.Commands.ChangePassword;
 using SIGTI.Application.Features.Users.Commands.CreateUser;
 using SIGTI.Application.Features.Users.Commands.DeactivateUser;
+using SIGTI.Application.Features.Users.Commands.ResetUserPassword;
 using SIGTI.Application.Features.Users.Commands.UpdateUser;
 using SIGTI.Application.Features.Users.Queries.GetUserById;
 using SIGTI.Application.Features.Users.Queries.ListUsers;
@@ -18,10 +21,15 @@ namespace SIGTI.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ISender _sender;
+        private readonly ICurrentUserService _currentUserService;
 
-        public UsersController(ISender sender)
+        public UsersController(
+            ISender sender,
+            ICurrentUserService currentUserService
+        )
         {
             _sender = sender;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
@@ -124,6 +132,38 @@ namespace SIGTI.API.Controllers
             var response = await _sender.Send(command, cancellationToken);
 
             return Ok(response);
+        }
+
+        [HttpPatch("change-password")]
+        public async Task<IActionResult> ChangePassword(
+            [FromBody] ChangePasswordRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new ChangePasswordCommand(
+                _currentUserService.UserId!.Value,
+                request.CurrentPassword,
+                request.NewPassword
+            );
+
+            await _sender.Send(command, cancellationToken);
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id:guid}/reset-password")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> ResetPassword(
+            [FromRoute] Guid id,
+            [FromBody] ResetUserPasswordRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new ResetUserPasswordCommand(id, request.NewPassword);
+
+            await _sender.Send(command, cancellationToken);
+
+            return NoContent();
         }
     }
 }

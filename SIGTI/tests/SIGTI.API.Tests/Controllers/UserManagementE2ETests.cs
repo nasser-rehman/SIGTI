@@ -4,9 +4,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SIGTI.API.Tests.Fixtures;
+using SIGTI.Application.Common.Interfaces.Services;
+using SIGTI.Application.Features.Auth.Commands.Login;
+using SIGTI.Application.Features.Users.Commands.ChangePassword;
 using SIGTI.Application.Features.Users.Commands.CreateUser;
 using SIGTI.Application.Features.Users.Commands.DeactivateUser;
+using SIGTI.Application.Features.Users.Commands.ResetUserPassword;
 using SIGTI.Application.Features.Users.Commands.UpdateUser;
 using SIGTI.Application.Features.Users.Queries.GetUserById;
 using SIGTI.Domain.Enums;
@@ -373,6 +378,176 @@ namespace SIGTI.API.Tests.Controllers
             );
 
             // Assert: RBAC should block 403 Forbidden
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task ChangePassword_WhenCurrentPasswordValid_ShouldChangeAndAllowLogin()
+        {
+            // Arrange
+            using var scope = _factory.Services.CreateScope();
+            var passwordHasher =
+                scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+            var initialPassword = "OldPassword123";
+            var newPassword = "NewPassword456";
+
+            var user = await _factory.ExecuteDbContextAsync(async context =>
+            {
+                var dept = await context.Departments.FirstAsync();
+                var u = new UserBuilder()
+                    .WithName("Carlos Troca Senha")
+                    .WithEmail("carlos.troca@sigti.local")
+                    .WithPasswordHash(passwordHasher.Hash(initialPassword))
+                    .WithRole(Role.User)
+                    .WithDepartment(dept)
+                    .Build();
+
+                await context.Users.AddAsync(u);
+                await context.SaveChangesAsync();
+                return u;
+            });
+
+            var userClient = _factory.CreateClientForUser(user);
+            var request = new ChangePasswordRequest(
+                initialPassword,
+                newPassword
+            );
+
+            // Act 1: Change password
+            var response = await userClient.PatchAsJsonAsync(
+                "/api/users/change-password",
+                request
+            );
+
+            // Assert 1: NoContent
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            // Act 2: Login with new password
+            var publicClient = _factory.CreateClient();
+            var loginResponse = await publicClient.PostAsJsonAsync(
+                "/api/auth/login",
+                new LoginCommand(user.Email.Value, newPassword)
+            );
+
+            // Assert 2: Login successful with 200 OK
+            loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task ChangePassword_WhenCurrentPasswordInvalid_ShouldReturnBadRequest()
+        {
+            // Arrange
+            using var scope = _factory.Services.CreateScope();
+            var passwordHasher =
+                scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+            var user = await _factory.ExecuteDbContextAsync(async context =>
+            {
+                var dept = await context.Departments.FirstAsync();
+                var u = new UserBuilder()
+                    .WithName("Ana Erro Senha")
+                    .WithEmail("ana.erro@sigti.local")
+                    .WithPasswordHash(passwordHasher.Hash("SenhaCorreta123"))
+                    .WithRole(Role.User)
+                    .WithDepartment(dept)
+                    .Build();
+
+                await context.Users.AddAsync(u);
+                await context.SaveChangesAsync();
+                return u;
+            });
+
+            var userClient = _factory.CreateClientForUser(user);
+            var request = new ChangePasswordRequest(
+                "SenhaErrada123",
+                "NovaSenha123"
+            );
+
+            // Act: Try to change with incorrect current password
+            var response = await userClient.PatchAsJsonAsync(
+                "/api/users/change-password",
+                request
+            );
+
+            // Assert: Bad Request (Domain Exception)
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WhenCalledByAdmin_ShouldResetAndAllowLogin()
+        {
+            // Arrange
+            using var scope = _factory.Services.CreateScope();
+            var passwordHasher =
+                scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+            var user = await _factory.ExecuteDbContextAsync(async context =>
+            {
+                var dept = await context.Departments.FirstAsync();
+                var u = new UserBuilder()
+                    .WithName("Usuario Reset")
+                    .WithEmail("usuario.reset@sigti.local")
+                    .WithPasswordHash(passwordHasher.Hash("SenhaEsquecida123"))
+                    .WithRole(Role.User)
+                    .WithDepartment(dept)
+                    .Build();
+
+                await context.Users.AddAsync(u);
+                await context.SaveChangesAsync();
+                return u;
+            });
+
+            var adminClient = _factory.CreateClientWithRole(Role.Administrator);
+            var newPassword = "AdminNewPass123";
+            var request = new ResetUserPasswordRequest(newPassword);
+
+            // Act 1: Admin resets user password
+            var response = await adminClient.PatchAsJsonAsync(
+                $"/api/users/{user.Id}/reset-password",
+                request
+            );
+
+            // Assert 1: NoContent
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            // Act 2: Login with reset password
+            var publicClient = _factory.CreateClient();
+            var loginResponse = await publicClient.PostAsJsonAsync(
+                "/api/auth/login",
+                new LoginCommand(user.Email.Value, newPassword)
+            );
+
+            // Assert 2: Login successful with 200 OK
+            loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task ResetPassword_WhenCalledByRegularUser_ShouldReturnForbidden()
+        {
+            // Arrange
+            var user = await _factory.ExecuteDbContextAsync(async context =>
+            {
+                var dept = await context.Departments.FirstAsync();
+                var u = new UserBuilder()
+                    .WithName("Usuario Alvo")
+                    .WithEmail("alvo@sigti.local")
+                    .WithRole(Role.User)
+                    .WithDepartment(dept)
+                    .Build();
+
+                await context.Users.AddAsync(u);
+                await context.SaveChangesAsync();
+                return u;
+            });
+
+            var regularClient = _factory.CreateClientWithRole(Role.User);
+            var request = new ResetUserPasswordRequest("TentativaHacker123");
+
+            // Act: Regular user tries to reset password
+            var response = await regularClient.PatchAsJsonAsync(
+                $"/api/users/{user.Id}/reset-password",
+                request
+            );
+
+            // Assert: RBAC blocks with 403 Forbidden
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
     }
