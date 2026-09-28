@@ -81,6 +81,9 @@ Commands (Escrita)
     │   ├── CreateTicketCommand
     │   ├── DispatchTicketCommand
     │   ├── StartTicketServiceCommand
+    │   ├── WaitCustomerTicketCommand
+    │   ├── ResumeTicketServiceCommand
+    │   ├── ReclassifyTicketCommand
     │   ├── TransferTicketCommand
     │   ├── AddCommentCommand
     │   ├── ResolveTicketCommand
@@ -193,10 +196,13 @@ A persistência é abstraída, permitindo testabilidade e garantindo que as tran
 
 O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centralizada na entidade `Ticket`:
 
-`New` -> `Dispatched` -> `InProgress` -> `Resolved` -> `Closed`
+`New` -> `Dispatched` -> `InProgress` <-> `WaitingCustomer` -> `Resolved` -> `Closed`
 
 - **Dispatch (`/dispatch`):** Permite despacho direto ou automático via fila (`LowestUtilizationStrategy`).
 - **Start (`/start`):** Transiciona para `InProgress`. Requer atribuição ativa.
+- **Wait Customer (`/wait-customer`):** Transiciona para `WaitingCustomer` (pausa técnica enquanto aguarda retorno do solicitante).
+- **Resume (`/resume`):** Retoma o atendimento voltando para `InProgress`.
+- **Reclassify (`/reclassify`):** Permite reclassificar prioridade e categoria por técnicos de triagem. O relato original (`Title` e `Description`) permanece **estritamente imutável** para auditoria e compliance.
 - **Resolve (`/resolve`):** Transiciona para `Resolved`. Válido a partir de `InProgress` ou `WaitingCustomer`.
 - **Close (`/close`):** Transiciona para `Closed`. Válido apenas a partir de `Resolved`.
 - **Estados Terminais:** Chamados no estado `Closed` são definitivos e não podem ser reabertos para preservar a integridade histórica de SLA e MTTR.
@@ -208,11 +214,15 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - `POST /api/tickets` - Criação de chamado (`New`)
 - `GET /api/tickets/{id}` - Busca detalhada
 - `GET /api/tickets` - Listagem paginada
-- `PATCH /api/tickets/{id}/dispatch` - Despacho manual ou automático
-- `PATCH /api/tickets/{id}/start` - Início do atendimento (`InProgress`)
-- `PATCH /api/tickets/{id}/resolve` - Resolução técnica (`Resolved`)
+- `GET /api/tickets/{id}/timeline` - Linha do tempo e histórico completo de eventos do chamado
+- `PATCH /api/tickets/{id}/dispatch` - Despacho manual ou automático (Restrito a `TechnicalStaff`)
+- `PATCH /api/tickets/{id}/start` - Início do atendimento (`InProgress`) (Restrito a `TechnicalStaff`)
+- `PATCH /api/tickets/{id}/wait-customer` - Pausa para aguardar cliente (`WaitingCustomer`) (Restrito a `TechnicalStaff`)
+- `PATCH /api/tickets/{id}/resume` - Retomada de atendimento técnico (`InProgress`) (Restrito a `TechnicalStaff`)
+- `PATCH /api/tickets/{id}/reclassify` - Reclassificação operacional de prioridade e categoria (Restrito a `TechnicalStaff`)
+- `PATCH /api/tickets/{id}/resolve` - Resolução técnica (`Resolved`) (Restrito a `TechnicalStaff`)
 - `PATCH /api/tickets/{id}/close` - Fechamento terminal (`Closed`)
-- `PATCH /api/tickets/{id}/transfer` - Transferência de fila e/ou técnico
+- `PATCH /api/tickets/{id}/transfer` - Transferência de fila e/ou técnico (Restrito a `TechnicalStaff`)
 - `POST /api/tickets/{id}/comments` - Adição de comentário ao chamado
 - `GET /api/tickets/{id}/comments` - Listagem cronológica dos comentários
 
@@ -264,7 +274,11 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Comentários no domínio.
 - [x] Adicionar comentários ao chamado (`AddCommentCommand`);
 - [x] Listar comentários do chamado em ordem cronológica (`ListTicketCommentsQuery`);
+- [x] Linha do tempo e auditoria cronológica completa de eventos (`GetTicketTimelineQuery`);
 - [x] Transferir ticket entre filas e técnicos (`TransferTicketCommand`);
+- [x] Pausa de atendimento para aguardar retorno do solicitante (`WaitCustomerTicketCommand`);
+- [x] Retomada de atendimento técnico (`ResumeTicketServiceCommand`);
+- [x] Reclassificação operacional de prioridade e categoria preservando imutabilidade do relato (`ReclassifyTicketCommand`);
 
 ### Filas de Suporte (Support Queues)
 - [x] Criação de filas de suporte com unicidade de nome (`CreateSupportQueueCommand`);
@@ -321,12 +335,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (355 testes aprovados)
-- [x] Testes de Domínio (100 testes): regras, entidades, invariantes de negócio e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (201 testes): cobertura de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+### Testes Automatizados (380 testes aprovados)
+- [x] Testes de Domínio (107 testes): regras, entidades, invariantes de negócio, transições de estado de tickets e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
+- [x] Testes de Aplicação (218 testes): cobertura completa de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
-- [x] Testes de Integração de API / E2E (31 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão completa de usuários, departamentos, filas de suporte e membros, e ciclo de vida completo do chamado.
+- [x] Testes de Integração de API / E2E (32 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão de usuários, departamentos, filas de suporte e membros, ciclo de vida e transições operacionais do chamado.
 
 ---
 
