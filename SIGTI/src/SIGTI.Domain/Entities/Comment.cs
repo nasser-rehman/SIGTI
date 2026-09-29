@@ -34,7 +34,7 @@ namespace SIGTI.Domain.Entities
             AuthorId = author.Id;
         }
 
-        public void UpdateContent(string content)
+        private void UpdateContent(string content)
         {
             if (string.IsNullOrWhiteSpace(content))
                 throw new DomainException(

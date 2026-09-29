@@ -25,9 +25,11 @@ namespace SIGTI.Application.Features.Departments.Queries.ListActiveDepartments
             CancellationToken cancellationToken
         )
         {
-            var departments = await _departmentRepository.ListActiveAsync(
-                cancellationToken
-            );
+            var departments = request.IncludeInactive
+                ? await _departmentRepository.ListAllAsync(cancellationToken)
+                : await _departmentRepository.ListActiveAsync(
+                    cancellationToken
+                );
 
             return departments
                 .Select(department => new ListActiveDepartmentsResponse(

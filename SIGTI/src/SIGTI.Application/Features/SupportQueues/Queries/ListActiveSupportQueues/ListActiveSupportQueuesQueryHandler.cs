@@ -25,15 +25,18 @@ namespace SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueu
             CancellationToken cancellationToken
         )
         {
-            var activeQueues = await _supportQueueRepository.ListActiveAsync(
-                cancellationToken
-            );
+            var activeQueues = request.IncludeInactive
+                ? await _supportQueueRepository.GetAllAsync(cancellationToken)
+                : await _supportQueueRepository.ListActiveAsync(
+                    cancellationToken
+                );
 
             var response = activeQueues
                 .Select(queue => new ListActiveSupportQueuesResponse(
                     queue.Id,
                     queue.Name,
-                    queue.Description
+                    queue.Description,
+                    queue.IsActive
                 ))
                 .ToList();
 

@@ -72,5 +72,39 @@ namespace SIGTI.Application.Tests.Features.SupportQueues.Queries.ListActiveSuppo
             response.Should().NotBeNull();
             response.Should().BeEmpty();
         }
+
+        [Fact]
+        public async Task Handle_WhenIncludeInactiveIsTrue_ShouldCallGetAllAsync()
+        {
+            var queueActive = new SupportQueueBuilder()
+                .WithName("Fila Ativa")
+                .Build();
+            var queueInactive = new SupportQueueBuilder()
+                .WithName("Fila Inativa")
+                .AsDeactivated()
+                .Build();
+
+            _supportQueueRepositoryMock
+                .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(
+                    new List<SupportQueue> { queueActive, queueInactive }
+                );
+
+            var response = await _handler.Handle(
+                new ListActiveSupportQueuesQuery(IncludeInactive: true),
+                CancellationToken.None
+            );
+
+            response.Should().HaveCount(2);
+            response.Should().Contain(q => !q.IsActive);
+            _supportQueueRepositoryMock.Verify(
+                x => x.GetAllAsync(It.IsAny<CancellationToken>()),
+                Times.Once
+            );
+            _supportQueueRepositoryMock.Verify(
+                x => x.ListActiveAsync(It.IsAny<CancellationToken>()),
+                Times.Never
+            );
+        }
     }
 }

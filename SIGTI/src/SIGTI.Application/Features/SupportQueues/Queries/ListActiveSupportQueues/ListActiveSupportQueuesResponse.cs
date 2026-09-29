@@ -3,6 +3,7 @@ namespace SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueu
     public sealed record ListActiveSupportQueuesResponse(
         Guid Id,
         string Name,
-        string Description
+        string Description,
+        bool IsActive
     );
 }

@@ -49,5 +49,43 @@ namespace SIGTI.Application.Tests.Features.Departments.Queries.ListActiveDepartm
                     && department.Name == departmentOne.Name
                 );
         }
+
+        [Fact]
+        public async Task Handle_WhenIncludeInactiveIsTrue_ShouldCallListAllAsync()
+        {
+            var activeDepartment = new DepartmentBuilder()
+                .WithName("Active Department")
+                .Build();
+            var inactiveDepartment = new DepartmentBuilder()
+                .WithName("Inactive Department")
+                .AsDeactivated()
+                .Build();
+
+            _departmentRepositoryMock
+                .Setup(r => r.ListAllAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(
+                    new List<Department>
+                    {
+                        activeDepartment,
+                        inactiveDepartment,
+                    }
+                );
+
+            var result = await _handler.Handle(
+                new ListActiveDepartmentsQuery(IncludeInactive: true),
+                CancellationToken.None
+            );
+
+            result.Should().HaveCount(2);
+            result.Should().Contain(d => !d.IsActive);
+            _departmentRepositoryMock.Verify(
+                r => r.ListAllAsync(It.IsAny<CancellationToken>()),
+                Times.Once
+            );
+            _departmentRepositoryMock.Verify(
+                r => r.ListActiveAsync(It.IsAny<CancellationToken>()),
+                Times.Never
+            );
+        }
     }
 }

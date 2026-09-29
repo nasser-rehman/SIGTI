@@ -11,6 +11,7 @@ using SIGTI.Application.Features.Departments.Commands.CreateDepartment;
 using SIGTI.Application.Features.Departments.Commands.DeactivateDepartment;
 using SIGTI.Application.Features.Departments.Commands.UpdateDepartment;
 using SIGTI.Application.Features.Departments.Queries.GetDepartmentById;
+using SIGTI.Application.Features.Departments.Queries.ListActiveDepartments;
 using SIGTI.Domain.Enums;
 using SIGTI.Domain.Tests.Builders;
 
@@ -354,6 +355,55 @@ namespace SIGTI.API.Tests.Controllers
             );
 
             // Assert: RBAC should block with 403 Forbidden
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task ListDepartments_WhenIncludeInactiveIsTrueAndCalledByAdmin_ShouldReturnAllDepartments()
+        {
+            // Arrange
+            await _factory.ExecuteDbContextAsync(async context =>
+            {
+                var inactiveDept = new DepartmentBuilder()
+                    .WithName("Departamento Desativado E2E")
+                    .AsDeactivated()
+                    .Build();
+
+                await context.Departments.AddAsync(inactiveDept);
+                await context.SaveChangesAsync();
+            });
+
+            var adminClient = _factory.CreateClientWithRole(Role.Administrator);
+
+            // Act: List with includeInactive = true
+            var response = await adminClient.GetAsync(
+                "/api/departments?includeInactive=true"
+            );
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var list = await response.Content.ReadFromJsonAsync<
+                List<ListActiveDepartmentsResponse>
+            >(JsonOptions);
+            list.Should().NotBeNull();
+            list!
+                .Should()
+                .Contain(d =>
+                    !d.IsActive && d.Name == "Departamento Desativado E2E"
+                );
+        }
+
+        [Fact]
+        public async Task ListDepartments_WhenIncludeInactiveIsTrueAndCalledByRegularUser_ShouldReturnForbidden()
+        {
+            var regularUserClient = _factory.CreateClientWithRole(Role.User);
+
+            // Act: Regular user tries to list inactive departments
+            var response = await regularUserClient.GetAsync(
+                "/api/departments?includeInactive=true"
+            );
+
+            // Assert: RBAC blocks with 403 Forbidden
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
     }

@@ -13,7 +13,9 @@ using SIGTI.Application.Features.SupportQueues.Commands.RemoveMember;
 using SIGTI.Application.Features.SupportQueues.Commands.UpdateMemberCapacity;
 using SIGTI.Application.Features.SupportQueues.Commands.UpdateSupportQueue;
 using SIGTI.Application.Features.SupportQueues.Queries.GetSupportQueueById;
+using SIGTI.Application.Features.SupportQueues.Queries.ListActiveSupportQueues;
 using SIGTI.Domain.Enums;
+using SIGTI.Domain.Tests.Builders;
 using Xunit;
 
 namespace SIGTI.API.Tests.Controllers
@@ -325,6 +327,53 @@ namespace SIGTI.API.Tests.Controllers
                 new UpdateMemberCapacityRequest(5)
             );
             updateCapacity.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task ListSupportQueues_WhenIncludeInactiveIsTrueAndCalledByAdmin_ShouldReturnAllQueues()
+        {
+            // Arrange
+            await _factory.ExecuteDbContextAsync(async context =>
+            {
+                var inactiveQueue = new SupportQueueBuilder()
+                    .WithName("Fila Desativada E2E")
+                    .AsDeactivated()
+                    .Build();
+
+                await context.SupportQueues.AddAsync(inactiveQueue);
+                await context.SaveChangesAsync();
+            });
+
+            var adminClient = _factory.CreateClientWithRole(Role.Administrator);
+
+            // Act: List with includeInactive = true
+            var response = await adminClient.GetAsync(
+                "/api/support-queues?includeInactive=true"
+            );
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var list = await response.Content.ReadFromJsonAsync<
+                List<ListActiveSupportQueuesResponse>
+            >(JsonOptions);
+            list.Should().NotBeNull();
+            list!
+                .Should()
+                .Contain(q => !q.IsActive && q.Name == "Fila Desativada E2E");
+        }
+
+        [Fact]
+        public async Task ListSupportQueues_WhenIncludeInactiveIsTrueAndCalledByRegularUser_ShouldReturnForbidden()
+        {
+            var regularUserClient = _factory.CreateClientWithRole(Role.User);
+
+            // Act: Regular user tries to list inactive queues
+            var response = await regularUserClient.GetAsync(
+                "/api/support-queues?includeInactive=true"
+            );
+
+            // Assert: RBAC blocks with 403 Forbidden
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
     }
 }

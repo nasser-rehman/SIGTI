@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGTI.Application.Common.Interfaces.Services;
 using SIGTI.Application.Features.SupportQueues.Commands.ActivateSupportQueue;
 using SIGTI.Application.Features.SupportQueues.Commands.AddMember;
 using SIGTI.Application.Features.SupportQueues.Commands.CreateSupportQueue;
@@ -21,10 +22,15 @@ namespace SIGTI.API.Controllers
     public class SupportQueueController : ControllerBase
     {
         private readonly ISender _sender;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SupportQueueController(ISender sender)
+        public SupportQueueController(
+            ISender sender,
+            ICurrentUserService currentUserService
+        )
         {
             _sender = sender;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet("{id:guid}")]
@@ -161,11 +167,18 @@ namespace SIGTI.API.Controllers
 
         [HttpGet]
         public async Task<IActionResult> ListActive(
-            CancellationToken cancellationToken
+            [FromQuery] bool includeInactive = false,
+            CancellationToken cancellationToken = default
         )
         {
+            if (
+                includeInactive
+                && !_currentUserService.IsInRole(Role.Administrator)
+            )
+                return Forbid();
+
             var response = await _sender.Send(
-                new ListActiveSupportQueuesQuery(),
+                new ListActiveSupportQueuesQuery(includeInactive),
                 cancellationToken
             );
 

@@ -9,6 +9,8 @@ namespace SIGTI.Domain.Tests.Builders
         private string _description =
             "Atendimento de primeiro nível (helpdesk).";
 
+        private bool _isActive = true;
+
         public SupportQueueBuilder WithName(string name)
         {
             _name = name;
@@ -21,9 +23,19 @@ namespace SIGTI.Domain.Tests.Builders
             return this;
         }
 
+        public SupportQueueBuilder AsDeactivated()
+        {
+            _isActive = false;
+            return this;
+        }
+
         public SupportQueue Build()
         {
-            return new SupportQueue(_name, _description);
+            var queue = new SupportQueue(_name, _description);
+            if (!_isActive)
+                queue.Deactivate();
+
+            return queue;
         }
     }
 }

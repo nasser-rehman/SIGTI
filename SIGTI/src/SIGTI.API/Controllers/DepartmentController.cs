@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGTI.Application.Common.Interfaces.Services;
 using SIGTI.Application.Features.Departments.Commands.ActivateDepartment;
 using SIGTI.Application.Features.Departments.Commands.CreateDepartment;
 using SIGTI.Application.Features.Departments.Commands.DeactivateDepartment;
@@ -8,6 +9,7 @@ using SIGTI.Application.Features.Departments.Commands.UpdateDepartment;
 using SIGTI.Application.Features.Departments.Queries.GetDepartmentById;
 using SIGTI.Application.Features.Departments.Queries.ListActiveDepartments;
 using SIGTI.Domain.Constants;
+using SIGTI.Domain.Enums;
 
 namespace SIGTI.API.Controllers
 {
@@ -17,10 +19,15 @@ namespace SIGTI.API.Controllers
     public class DepartmentController : ControllerBase
     {
         private readonly ISender _sender;
+        private readonly ICurrentUserService _currentUserService;
 
-        public DepartmentController(ISender sender)
+        public DepartmentController(
+            ISender sender,
+            ICurrentUserService currentUserService
+        )
         {
             _sender = sender;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost]
@@ -60,11 +67,17 @@ namespace SIGTI.API.Controllers
 
         [HttpGet]
         public async Task<IActionResult> ListActive(
-            CancellationToken cancellationToken
+            [FromQuery] bool includeInactive = false,
+            CancellationToken cancellationToken = default
         )
         {
+            if (
+                includeInactive
+                && !_currentUserService.IsInRole(Role.Administrator)
+            )
+                return Forbid();
             var response = await _sender.Send(
-                new ListActiveDepartmentsQuery(),
+                new ListActiveDepartmentsQuery(includeInactive),
                 cancellationToken
             );
 
