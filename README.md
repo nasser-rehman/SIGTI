@@ -105,7 +105,9 @@ Commands (Escrita)
     │   ├── CreateUserCommand
     │   ├── UpdateUserCommand
     │   ├── DeactivateUserCommand
-    │   └── ActivateUserCommand
+    │   ├── ActivateUserCommand
+    │   ├── ChangePasswordCommand
+    │   └── ResetUserPasswordCommand
     └── Auth
         └── LoginCommand
 
@@ -116,10 +118,10 @@ Queries (Leitura)
 │   ├── ListTicketCommentsQuery
 │   └── GetTicketTimelineQuery
 ├── SupportQueues
-│   ├── ListActiveSupportQueuesQuery
+│   ├── ListActiveSupportQueuesQuery (com suporte a includeInactive)
 │   └── GetSupportQueueByIdQuery
 ├── Departments
-│   ├── ListActiveDepartmentsQuery
+│   ├── ListActiveDepartmentsQuery (com suporte a includeInactive)
 │   └── GetDepartmentByIdQuery
 └── Users
     ├── ListUsersQuery
@@ -234,13 +236,13 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 
 - `POST /api/support-queues` - Criação de fila de suporte com garantia de unicidade de nome
 - `POST /api/support-queues/{id}/members` - Associação de técnico à fila com definição de limite concorrente (`MaxConcurrentTickets`)
-- `GET /api/support-queues` - Listagem de filas de atendimento ativas
+- `GET /api/support-queues` - Listagem de filas de atendimento (suporta parâmetro opcional `?includeInactive=true` restrito a `Administrator`)
 
 #### Departamentos
 
 - `POST /api/departments` - Criação de departamento com garantia de unicidade de nome (Restrito a `Administrator`)
 - `GET /api/departments/{id}` - Obtenção detalhada de departamento por identificador
-- `GET /api/departments` - Listagem de departamentos ativos
+- `GET /api/departments` - Listagem de departamentos (suporta parâmetro opcional `?includeInactive=true` restrito a `Administrator`)
 - `PUT /api/departments/{id}` - Atualização cadastral de nome e descrição com validação de duplicidade (Restrito a `Administrator`)
 - `PATCH /api/departments/{id}/deactivate` - Desativação lógica do departamento (Restrito a `Administrator`)
 - `PATCH /api/departments/{id}/activate` - Reativação lógica do departamento (Restrito a `Administrator`)
@@ -251,6 +253,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - `GET /api/users/{id}` - Obtenção detalhada do perfil de usuário por identificador (Restrito a `TechnicalStaff`)
 - `GET /api/users` - Listagem de usuários com suporte a filtro opcional por papel (`?role=Technician`) (Restrito a `TechnicalStaff`)
 - `PATCH /api/users/{id}/deactivate` - Desativação lógica de usuário com proteção contra auto-desativação e usuários de sistema (Restrito a `Administrator`)
+- `PATCH /api/users/{id}/activate` - Reativação lógica de usuário (Restrito a `Administrator`)
+- `PATCH /api/users/change-password` - Alteração da própria senha pelo usuário autenticado via JWT (requer validação da senha atual)
+- `PATCH /api/users/{id}/reset-password` - Redefinição administrativa de credencial sem necessidade da senha anterior (Restrito a `Administrator`)
 
 ---
 
@@ -271,7 +276,8 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Ordenação customizada;
 - [x] Controle de prioridade e categoria;
 - [x] Histórico completo de atribuições;
-- [x] Comentários no domínio.
+- [x] Comentários no domínio;
+- [x] Imutabilidade estrita em comentários (append-only para compliance e auditoria forense);
 - [x] Adicionar comentários ao chamado (`AddCommentCommand`);
 - [x] Listar comentários do chamado em ordem cronológica (`ListTicketCommentsQuery`);
 - [x] Linha do tempo e auditoria cronológica completa de eventos (`GetTicketTimelineQuery`);
@@ -292,7 +298,7 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Prevenção de duplicidade e reativação de membros inativos na fila;
 - [x] Validação de papel de técnico no domínio (`technician.IsTechnician()`);
 - [x] Consulta detalhada de fila por ID com membros e capacidades (`GetSupportQueueByIdQuery`);
-- [x] Listagem de filas ativas (`ListActiveSupportQueuesQuery`);
+- [x] Listagem de filas ativas (`ListActiveSupportQueuesQuery`) com suporte a filtro de inativas para administradores (`?includeInactive=true`);
 - [x] Endpoints HTTP dedicados para gestão de filas e membros com proteção RBAC (`SupportQueueController`);
 - [x] Testes de integração ponta a ponta (E2E) para o ciclo de vida de filas e membros (`SupportQueueManagementE2ETests`).
 
@@ -302,7 +308,7 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Desativação lógica de departamentos com proteção contra transição redundante (`DeactivateDepartmentCommand`);
 - [x] Reativação lógica de departamentos com proteção contra ativação de departamento já ativo (`ActivateDepartmentCommand`);
 - [x] Consulta detalhada de departamento por ID (`GetDepartmentByIdQuery`);
-- [x] Listagem de departamentos ativos (`ListActiveDepartmentsQuery`);
+- [x] Listagem de departamentos ativos (`ListActiveDepartmentsQuery`) com suporte a filtro de inativos para administradores (`?includeInactive=true`);
 - [x] Endpoints HTTP dedicados (`DepartmentController`);
 - [x] Testes de integração ponta a ponta (E2E) para o ciclo de vida de departamentos (`DepartmentManagementE2ETests`).
 
@@ -311,6 +317,8 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Atualização de dados cadastrais de usuários (`UpdateUserCommand`);
 - [x] Desativação lógica de usuários com proteções de segurança (`DeactivateUserCommand`);
 - [x] Reativação lógica de usuários (`ActivateUserCommand`);
+- [x] Troca da própria senha pelo usuário autenticado com validação de senha atual e política de segurança (`ChangePasswordCommand`);
+- [x] Redefinição administrativa de senhas de usuários (`ResetUserPasswordCommand`);
 - [x] Garantia de unicidade de e-mail no domínio;
 - [x] Hash seguro de senhas com BCrypt (`IPasswordHasher`);
 - [x] Consulta detalhada de usuário por ID (`GetUserByIdQuery`);
@@ -335,12 +343,12 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Global Exception Handler;
 - [x] Swagger/OpenAPI.
 
-### Testes Automatizados (380 testes aprovados)
+### Testes Automatizados (409 testes aprovados)
 - [x] Testes de Domínio (107 testes): regras, entidades, invariantes de negócio, transições de estado de tickets e builders (`TicketBuilder`, `SupportQueueBuilder`, `UserBuilder`, etc.);
-- [x] Testes de Aplicação (218 testes): cobertura completa de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
+- [x] Testes de Aplicação (239 testes): cobertura completa de Handlers, Validators (FluentValidation) e Pipeline Behaviors;
 - [x] Testes com Moq e isolamento via `IEntityReferenceService` e `IUnitOfWork`;
 - [x] Testes de Integração de Repositórios (23 testes): execução real com PostgreSQL e isolamento de dados via Respawn;
-- [x] Testes de Integração de API / E2E (32 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão de usuários, departamentos, filas de suporte e membros, ciclo de vida e transições operacionais do chamado.
+- [x] Testes de Integração de API / E2E (40 testes): execução ponta a ponta com `WebApplicationFactory`, validando autenticação JWT, controle de acesso RBAC, gestão de usuários, senhas, departamentos, filas de suporte e membros, filtros de inativos, ciclo de vida e transições operacionais do chamado.
 
 ---
 
