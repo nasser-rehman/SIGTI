@@ -10,6 +10,7 @@ using SIGTI.Infrastructure.Persistence.Queries;
 using SIGTI.Infrastructure.Persistence.Repositories;
 using SIGTI.Infrastructure.Persistence.Seed;
 using SIGTI.Infrastructure.Services;
+using SIGTI.Infrastructure.Storage;
 
 namespace SIGTI.Infrastructure;
 
@@ -56,6 +57,12 @@ public static class DependencyInjection
 
         //Factories
         services.AddSingleton<TicketFactory>();
+
+        // Storage
+        services.Configure<FileStorageOptions>(
+            configuration.GetSection(FileStorageOptions.SectionName)
+        );
+        services.AddScoped<IFileStorageService, LocalStorageService>();
 
         return services;
     }

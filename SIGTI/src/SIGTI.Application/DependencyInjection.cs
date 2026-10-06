@@ -40,6 +40,7 @@ public static class DependencyInjection
             ITicketAssignmentStrategy,
             LowestUtilizationStrategy
         >();
+        services.AddSingleton<IFileSecurityValidator, FileSecurityValidator>();
 
         return services;
     }
