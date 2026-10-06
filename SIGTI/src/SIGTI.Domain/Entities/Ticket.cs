@@ -53,6 +53,9 @@ namespace SIGTI.Domain.Entities
         public TicketAssignment? CurrentAssignment =>
             _assignments.FirstOrDefault(x => x.FinishedAt == null);
 
+        private readonly List<Attachment> _attachments = [];
+        public IReadOnlyCollection<Attachment> Attachments => _attachments;
+
         private Ticket() { }
 
         public Ticket(
@@ -343,6 +346,20 @@ namespace SIGTI.Domain.Entities
 
             Status = TicketStatus.Assigned;
 
+            UpdateTimestamp();
+        }
+
+        public void AddAttachment(Attachment attachment)
+        {
+            if (Status == TicketStatus.Closed)
+                throw new DomainException(
+                    "Não é possível adicionar anexos a tickets fechados."
+                );
+
+            if (attachment is null)
+                throw new DomainException("O anexo é obrigatório.");
+
+            _attachments.Add(attachment);
             UpdateTimestamp();
         }
     }

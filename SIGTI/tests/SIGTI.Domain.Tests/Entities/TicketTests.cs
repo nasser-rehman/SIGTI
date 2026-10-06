@@ -371,4 +371,51 @@ public class TicketTests
                 "Não é possível reclassificar tickets resolvidos ou fechados."
             );
     }
+
+    [Fact]
+    public void Should_Add_Attachment()
+    {
+        var ticket = new TicketBuilder().Build();
+        var user = new UserBuilder().Build();
+        var attachment = new AttachmentBuilder()
+            .WithTicket(ticket)
+            .WithUploadedBy(user)
+            .Build();
+
+        ticket.AddAttachment(attachment);
+
+        ticket.Attachments.Should().Contain(attachment);
+        ticket.UpdatedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Should_Not_Add_Attachment_To_Closed_Ticket()
+    {
+        var ticket = new TicketBuilder().BuildAsClosed();
+        var user = new UserBuilder().Build();
+        var attachment = new AttachmentBuilder()
+            .WithTicket(ticket)
+            .WithUploadedBy(user)
+            .Build();
+
+        Action action = () => ticket.AddAttachment(attachment);
+
+        action
+            .Should()
+            .Throw<DomainException>()
+            .WithMessage("Não é possível adicionar anexos a tickets fechados.");
+    }
+
+    [Fact]
+    public void Should_Throw_When_Adding_Null_Attachment()
+    {
+        var ticket = new TicketBuilder().Build();
+
+        Action action = () => ticket.AddAttachment(null!);
+
+        action
+            .Should()
+            .Throw<DomainException>()
+            .WithMessage("O anexo é obrigatório.");
+    }
 }
